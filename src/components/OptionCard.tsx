@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import QuantitySelector from './QuantitySelector';
 
 interface NestedOption {
   id: string;
@@ -17,6 +18,9 @@ interface OptionCardProps {
   nestedOptions?: NestedOption[];
   selectedNestedOption?: string | null;
   onNestedOptionSelect?: (optionId: string) => void;
+  hasQuantity?: boolean;
+  quantity?: number;
+  onQuantityChange?: (quantity: number) => void;
 }
 
 const OptionCard: React.FC<OptionCardProps> = ({
@@ -26,7 +30,10 @@ const OptionCard: React.FC<OptionCardProps> = ({
   onClick,
   nestedOptions,
   selectedNestedOption,
-  onNestedOptionSelect
+  onNestedOptionSelect,
+  hasQuantity = false,
+  quantity = 1,
+  onQuantityChange
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -50,6 +57,18 @@ const OptionCard: React.FC<OptionCardProps> = ({
     }
   };
 
+  const handleIncrease = () => {
+    if (onQuantityChange && quantity < 10) {
+      onQuantityChange(quantity + 1);
+    }
+  };
+
+  const handleDecrease = () => {
+    if (onQuantityChange && quantity > 1) {
+      onQuantityChange(quantity - 1);
+    }
+  };
+
   return (
     <div className="flex flex-col">
       <div 
@@ -62,10 +81,18 @@ const OptionCard: React.FC<OptionCardProps> = ({
           </div>
         )}
         
-        <h4 className="text-base font-medium mb-1">{title}</h4>
-        <div className="text-sm text-merrymoment-brown">
+        <h4 className="text-base font-medium mb-1 font-pretendard">{title}</h4>
+        <div className="text-sm text-merrymoment-brown font-pretendard">
           {price.toLocaleString()}원
         </div>
+        
+        {isSelected && hasQuantity && onQuantityChange && (
+          <QuantitySelector
+            quantity={quantity}
+            onIncrease={handleIncrease}
+            onDecrease={handleDecrease}
+          />
+        )}
       </div>
 
       {/* Nested options dropdown */}
@@ -76,7 +103,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
               key={option.id}
               onClick={(e) => handleNestedOptionClick(e, option.id)}
               className={cn(
-                "py-2 px-3 mb-1 rounded-md cursor-pointer flex justify-between items-center text-sm",
+                "py-2 px-3 mb-1 rounded-md cursor-pointer flex justify-between items-center text-sm font-pretendard",
                 selectedNestedOption === option.id 
                   ? "bg-merrymoment-beige text-merrymoment-darkbrown"
                   : "bg-merrymoment-cream hover:bg-merrymoment-beige/30"

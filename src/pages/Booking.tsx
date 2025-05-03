@@ -61,8 +61,8 @@ const addOnOptions = [
   { id: 4, title: "쌍둥이 촬영", price: 60000 },
   { id: 5, title: "백일/돌상 세팅", price: 100000 },
   { id: 6, title: "생화 화관", price: 50000 }, // Updated from 꽃관 to 화관
-  { id: 7, title: "하드커버 앨범", price: 120000, hasNestedOptions: true, optionsType: 'album' },
-  { id: 8, title: "프리미엄 액자 추가", price: 90000, hasNestedOptions: true, optionsType: 'frame' },
+  { id: 7, title: "하드커버 앨범", price: 120000, hasNestedOptions: true, optionsType: 'album', hasQuantity: true },
+  { id: 8, title: "프리미엄 액자 추가", price: 90000, hasNestedOptions: true, optionsType: 'frame', hasQuantity: true },
 ];
 
 const steps = ["패키지 선택", "옵션 선택", "정보 입력", "예약 완료"];
@@ -76,6 +76,7 @@ const Booking: React.FC = () => {
     'album': null,
     'frame': null
   });
+  const [optionQuantities, setOptionQuantities] = useState<Record<number, number>>({});
   const [contactInfo, setContactInfo] = useState({
     name: "",
     phone: "",
@@ -106,8 +107,22 @@ const Booking: React.FC = () => {
             [option.optionsType]: null
           }));
         }
+        // Also clear quantity
+        setOptionQuantities(prev => {
+          const newQuantities = {...prev};
+          delete newQuantities[optionId];
+          return newQuantities;
+        });
         return prev.filter((id) => id !== optionId);
       } else {
+        // When selecting option, set default quantity to 1
+        const option = addOnOptions.find(opt => opt.id === optionId);
+        if (option?.hasQuantity) {
+          setOptionQuantities(prev => ({
+            ...prev,
+            [optionId]: 1
+          }));
+        }
         return [...prev, optionId];
       }
     });
@@ -117,6 +132,13 @@ const Booking: React.FC = () => {
     setSelectedNestedOptions(prev => ({
       ...prev,
       [optionType]: optionId
+    }));
+  };
+  
+  const handleQuantityChange = (optionId: number, quantity: number) => {
+    setOptionQuantities(prev => ({
+      ...prev,
+      [optionId]: quantity
     }));
   };
 
@@ -142,21 +164,24 @@ const Booking: React.FC = () => {
   const getOptionsTotal = () => {
     let optionsTotal = selectedOptions.reduce((total, optionId) => {
       const option = addOnOptions.find((opt) => opt.id === optionId);
-      return total + (option?.price || 0);
+      const quantity = optionQuantities[optionId] || 1;
+      return total + (option?.price || 0) * quantity;
     }, 0);
 
     // Add nested option prices
     if (selectedOptions.includes(7) && selectedNestedOptions.album) {
       const albumOption = albumSizeOptions.find(opt => opt.id === selectedNestedOptions.album);
       if (albumOption) {
-        optionsTotal += albumOption.price;
+        const quantity = optionQuantities[7] || 1;
+        optionsTotal += albumOption.price * quantity;
       }
     }
 
     if (selectedOptions.includes(8) && selectedNestedOptions.frame) {
       const frameOption = frameSizeOptions.find(opt => opt.id === selectedNestedOptions.frame);
       if (frameOption) {
-        optionsTotal += frameOption.price;
+        const quantity = optionQuantities[8] || 1;
+        optionsTotal += frameOption.price * quantity;
       }
     }
 
@@ -217,13 +242,13 @@ const Booking: React.FC = () => {
                 <h2 className="text-2xl font-brandon text-merrymoment-darkbrown mb-2">
                   패키지 선택
                 </h2>
-                <p className="text-merrymoment-brown">
+                <p className="text-merrymoment-brown font-pretendard">
                   원하시는 촬영 패키지를 선택해주세요.
                 </p>
               </div>
               
               <div className="mb-6">
-                <p className="text-sm text-merrymoment-brown mb-2">촬영 요일 선택</p>
+                <p className="text-sm text-merrymoment-brown mb-2 font-pretendard">촬영 요일 선택</p>
                 <WeekdayToggle isWeekend={isWeekend} onChange={handleWeekendToggle} />
               </div>
               
@@ -258,7 +283,7 @@ const Booking: React.FC = () => {
                 <h2 className="text-2xl font-brandon text-merrymoment-darkbrown mb-2">
                   옵션 선택
                 </h2>
-                <p className="text-merrymoment-brown">
+                <p className="text-merrymoment-brown font-pretendard">
                   필요한 추가 옵션을 선택해주세요.
                 </p>
               </div>
@@ -279,6 +304,8 @@ const Booking: React.FC = () => {
                     }
                   }
                   
+                  const quantity = optionQuantities[option.id] || 1;
+                  
                   return (
                     <OptionCard
                       key={option.id}
@@ -290,6 +317,11 @@ const Booking: React.FC = () => {
                       selectedNestedOption={hasNestedOptions ? selectedNestedOption : undefined}
                       onNestedOptionSelect={hasNestedOptions && option.optionsType 
                         ? (optionId) => handleNestedOptionSelect(option.optionsType!, optionId) 
+                        : undefined}
+                      hasQuantity={option.hasQuantity}
+                      quantity={quantity}
+                      onQuantityChange={option.hasQuantity 
+                        ? (newQuantity) => handleQuantityChange(option.id, newQuantity) 
                         : undefined}
                     />
                   );
@@ -312,14 +344,14 @@ const Booking: React.FC = () => {
                 <h2 className="text-2xl font-brandon text-merrymoment-darkbrown mb-2">
                   정보 입력
                 </h2>
-                <p className="text-merrymoment-brown">
+                <p className="text-merrymoment-brown font-pretendard">
                   예약을 위한 연락처 정보를 입력해주세요.
                 </p>
               </div>
               
               <div className="space-y-4 mb-8">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-1 text-merrymoment-darkbrown">
+                  <label htmlFor="name" className="block text-sm font-medium mb-1 text-merrymoment-darkbrown font-pretendard">
                     이름 <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -328,14 +360,14 @@ const Booking: React.FC = () => {
                     name="name"
                     value={contactInfo.name}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-merrymoment-beige rounded-md focus:outline-none focus:border-merrymoment-brown"
+                    className="w-full px-3 py-2 border border-merrymoment-beige rounded-md focus:outline-none focus:border-merrymoment-brown font-pretendard"
                     placeholder="이름을 입력하세요"
                     required
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium mb-1 text-merrymoment-darkbrown">
+                  <label htmlFor="phone" className="block text-sm font-medium mb-1 text-merrymoment-darkbrown font-pretendard">
                     연락처 <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -344,14 +376,14 @@ const Booking: React.FC = () => {
                     name="phone"
                     value={contactInfo.phone}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-merrymoment-beige rounded-md focus:outline-none focus:border-merrymoment-brown"
+                    className="w-full px-3 py-2 border border-merrymoment-beige rounded-md focus:outline-none focus:border-merrymoment-brown font-pretendard"
                     placeholder="010-0000-0000"
                     required
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-1 text-merrymoment-darkbrown">
+                  <label htmlFor="email" className="block text-sm font-medium mb-1 text-merrymoment-darkbrown font-pretendard">
                     이메일 (선택)
                   </label>
                   <input
@@ -360,7 +392,7 @@ const Booking: React.FC = () => {
                     name="email"
                     value={contactInfo.email}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-merrymoment-beige rounded-md focus:outline-none focus:border-merrymoment-brown"
+                    className="w-full px-3 py-2 border border-merrymoment-beige rounded-md focus:outline-none focus:border-merrymoment-brown font-pretendard"
                     placeholder="example@email.com"
                   />
                 </div>
@@ -382,15 +414,15 @@ const Booking: React.FC = () => {
                 <h2 className="text-2xl font-brandon text-merrymoment-darkbrown mb-2">
                   예약 완료
                 </h2>
-                <p className="text-merrymoment-brown">
+                <p className="text-merrymoment-brown font-pretendard">
                   아래 내용을 확인하시고 예약을 진행해주세요.
                 </p>
               </div>
               
               <div className="border border-merrymoment-beige rounded-md p-5 mb-6">
-                <h3 className="font-medium text-lg mb-3 text-merrymoment-darkbrown">예약 정보</h3>
+                <h3 className="font-medium text-lg mb-3 text-merrymoment-darkbrown font-pretendard">예약 정보</h3>
                 
-                <div className="space-y-3 text-sm">
+                <div className="space-y-3 text-sm font-pretendard">
                   <div className="grid grid-cols-3 gap-2">
                     <span className="text-merrymoment-brown">이름:</span>
                     <span className="col-span-2">{contactInfo.name}</span>
@@ -432,17 +464,23 @@ const Booking: React.FC = () => {
                             if (!option) return null;
                             
                             let optionText = option.title;
+                            const quantity = optionQuantities[optionId] || 1;
+                            
+                            // Add quantity if applicable
+                            if (option.hasQuantity && quantity > 1) {
+                              optionText += ` (${quantity}개)`;
+                            }
                             
                             // Add nested option details
                             if (option.id === 7 && selectedNestedOptions.album) { // Album
                               const albumOption = albumSizeOptions.find(opt => opt.id === selectedNestedOptions.album);
                               if (albumOption) {
-                                optionText += ` (${albumOption.title})`;
+                                optionText += ` - ${albumOption.title}`;
                               }
                             } else if (option.id === 8 && selectedNestedOptions.frame) { // Frame
                               const frameOption = frameSizeOptions.find(opt => opt.id === selectedNestedOptions.frame);
                               if (frameOption) {
-                                optionText += ` (${frameOption.title})`;
+                                optionText += ` - ${frameOption.title}`;
                               }
                             }
                             
@@ -467,11 +505,11 @@ const Booking: React.FC = () => {
               <div className="text-center">
                 <Button 
                   onClick={handleExternalBooking}
-                  className="w-full bg-merrymoment-brown hover:bg-merrymoment-darkbrown text-white py-3 px-6 rounded"
+                  className="w-full bg-merrymoment-brown hover:bg-merrymoment-darkbrown text-white py-3 px-6 rounded font-pretendard"
                 >
                   예약하기
                 </Button>
-                <p className="mt-3 text-sm text-merrymoment-brown">
+                <p className="mt-3 text-sm text-merrymoment-brown font-pretendard">
                   예약 버튼을 클릭하면 외부 예약 시스템으로 연결됩니다.
                 </p>
               </div>
@@ -484,7 +522,7 @@ const Booking: React.FC = () => {
               <Button 
                 variant="outline" 
                 onClick={handlePrevStep}
-                className="border-merrymoment-beige text-merrymoment-brown hover:bg-merrymoment-beige"
+                className="border-merrymoment-beige text-merrymoment-brown hover:bg-merrymoment-beige font-pretendard"
               >
                 이전
               </Button>
@@ -493,7 +531,7 @@ const Booking: React.FC = () => {
             {currentStep < 3 && (
               <Button 
                 onClick={handleNextStep}
-                className={`ml-auto bg-merrymoment-brown hover:bg-merrymoment-darkbrown text-white ${
+                className={`ml-auto bg-merrymoment-brown hover:bg-merrymoment-darkbrown text-white font-pretendard ${
                   currentStep === 0 && !selectedPackage ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >

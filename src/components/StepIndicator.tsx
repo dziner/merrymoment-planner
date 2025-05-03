@@ -17,15 +17,15 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, steps }) => 
               className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center text-sm",
                 index < currentStep
-                  ? "bg-merrymoment-brown text-white"
+                  ? "bg-merrymoment-brown text-white" // Completed step
                   : index === currentStep
-                  ? "bg-merrymoment-beige text-merrymoment-darkbrown"
-                  : "bg-merrymoment-cream border border-merrymoment-beige text-merrymoment-brown"
+                  ? "bg-merrymoment-darkbrown text-white ring-2 ring-merrymoment-brown" // Current step - made more prominent
+                  : "bg-merrymoment-cream border border-merrymoment-beige text-merrymoment-brown" // Future step
               )}
             >
               {index + 1}
             </div>
-            <span className="text-xs mt-1 text-center max-w-[60px]">{step}</span>
+            <span className="text-xs mt-1 text-center max-w-[60px] font-pretendard">{step}</span>
           </div>
         ))}
       </div>
@@ -37,8 +37,10 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, steps }) => 
             className={cn(
               "flex-1",
               index < currentStep
-                ? "bg-merrymoment-brown"
-                : "bg-merrymoment-beige"
+                ? "bg-merrymoment-brown" // Completed step
+                : index === currentStep
+                ? "bg-merrymoment-darkbrown" // Current step
+                : "bg-merrymoment-beige" // Future step
             )}
           />
         ))}

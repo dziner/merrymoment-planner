@@ -74,6 +74,8 @@ export default {
 				sans: ['Pretendard', 'sans-serif'],
 				serif: ['"Noto Serif KR"', 'serif'],
 				brandon: ['brandon-grotesque', 'sans-serif'],
+				pretendard: ['Pretendard', 'sans-serif'],
+				rozha: ['"Rozha One"', 'serif'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
