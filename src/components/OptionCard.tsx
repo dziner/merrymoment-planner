@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, MouseEvent } from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import QuantitySelector from './QuantitySelector';
@@ -50,20 +50,22 @@ const OptionCard: React.FC<OptionCardProps> = ({
     }
   };
 
-  const handleNestedOptionClick = (e: React.MouseEvent, optionId: string) => {
+  const handleNestedOptionClick = (e: MouseEvent, optionId: string) => {
     e.stopPropagation();
     if (onNestedOptionSelect) {
       onNestedOptionSelect(optionId);
     }
   };
 
-  const handleIncrease = () => {
+  const handleIncrease = (e: MouseEvent) => {
+    e.stopPropagation();
     if (onQuantityChange && quantity < 10) {
       onQuantityChange(quantity + 1);
     }
   };
 
-  const handleDecrease = () => {
+  const handleDecrease = (e: MouseEvent) => {
+    e.stopPropagation();
     if (onQuantityChange && quantity > 1) {
       onQuantityChange(quantity - 1);
     }
@@ -86,11 +88,11 @@ const OptionCard: React.FC<OptionCardProps> = ({
           {price.toLocaleString()}원
         </div>
         
-        {isSelected && hasQuantity && onQuantityChange && (
+        {isSelected && hasQuantity && onQuantityChange && !nestedOptions && (
           <QuantitySelector
             quantity={quantity}
-            onIncrease={handleIncrease}
-            onDecrease={handleDecrease}
+            onIncrease={(e) => handleIncrease(e as unknown as MouseEvent)}
+            onDecrease={(e) => handleDecrease(e as unknown as MouseEvent)}
           />
         )}
       </div>
@@ -115,6 +117,17 @@ const OptionCard: React.FC<OptionCardProps> = ({
               )}
             </div>
           ))}
+          
+          {selectedNestedOption && onQuantityChange && (
+            <div className="mt-2 px-3" onClick={(e) => e.stopPropagation()}>
+              <QuantitySelector
+                label="수량"
+                quantity={quantity}
+                onIncrease={() => onQuantityChange(quantity + 1)}
+                onDecrease={() => onQuantityChange(quantity - 1)}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -39,7 +39,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
         </div>
       )}
       
-      <h3 className="text-xl font-medium font-serif mb-3">{title}</h3>
+      <h3 className="text-xl font-medium font-pretendard mb-3">{title}</h3>
       <div className="price-display mb-5 text-merrymoment-darkbrown">
         <span className="text-xl font-medium">
           {currentPrice.toLocaleString()}원

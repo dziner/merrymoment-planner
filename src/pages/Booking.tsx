@@ -7,6 +7,7 @@ import PackageCard from '@/components/PackageCard';
 import WeekdayToggle from '@/components/WeekdayToggle';
 import OptionCard from '@/components/OptionCard';
 import PriceCalculator from '@/components/PriceCalculator';
+import QuantitySelector from '@/components/QuantitySelector';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -21,7 +22,7 @@ const packageData = {
       { text: "10장 보정본 제공" },
       { text: "모든 원본 사진 (ZIP)" },
       { text: "아기 한복 대여 포함" },
-      { text: "기본 화관 포함" }, // Updated from 꽃관 to 화관
+      { text: "기본 화관 포함" },
       { text: "모바일 갤러리 포함" },
     ],
   },
@@ -35,7 +36,7 @@ const packageData = {
       { text: "프리미엄 액자 1개 포함" },
       { text: "모든 원본 사진 (ZIP)" },
       { text: "아기 한복 대여 포함" },
-      { text: "기본 화관 포함" }, // Updated from 꽃관 to 화관
+      { text: "기본 화관 포함" },
       { text: "모바일 갤러리 포함" },
     ],
   }
@@ -54,13 +55,14 @@ const albumSizeOptions = [
   { id: 'album-mini', title: '미니앨범', price: -20000 }
 ];
 
+// Add on options
 const addOnOptions = [
   { id: 1, title: "보정본 5장 추가", price: 70000 },
   { id: 2, title: "보정본 10장 추가", price: 120000 },
-  { id: 3, title: "추가 인원", price: 50000 },
+  { id: 3, title: "추가 인원", price: 50000, hasQuantity: true },
   { id: 4, title: "쌍둥이 촬영", price: 60000 },
   { id: 5, title: "백일/돌상 세팅", price: 100000 },
-  { id: 6, title: "생화 화관", price: 50000 }, // Updated from 꽃관 to 화관
+  { id: 6, title: "생화 화관", price: 50000 },
   { id: 7, title: "하드커버 앨범", price: 120000, hasNestedOptions: true, optionsType: 'album', hasQuantity: true },
   { id: 8, title: "프리미엄 액자 추가", price: 90000, hasNestedOptions: true, optionsType: 'frame', hasQuantity: true },
 ];
@@ -159,6 +161,42 @@ const Booking: React.FC = () => {
       : packageData.momentPremium;
       
     return isWeekend ? packageInfo.weekendPrice : packageInfo.weekdayPrice;
+  };
+
+  // Create summary of selected options for display in PriceCalculator
+  const getOptionsSummary = () => {
+    const summary = selectedOptions.map(optionId => {
+      const option = addOnOptions.find((opt) => opt.id === optionId);
+      if (!option) return null;
+      
+      const quantity = optionQuantities[optionId] || 1;
+      let nestedOptionTitle = null;
+      let totalPrice = option.price * quantity;
+      
+      // Add nested option details
+      if (option.id === 7 && selectedNestedOptions.album) { // Album
+        const albumOption = albumSizeOptions.find(opt => opt.id === selectedNestedOptions.album);
+        if (albumOption) {
+          nestedOptionTitle = albumOption.title;
+          totalPrice += albumOption.price * quantity;
+        }
+      } else if (option.id === 8 && selectedNestedOptions.frame) { // Frame
+        const frameOption = frameSizeOptions.find(opt => opt.id === selectedNestedOptions.frame);
+        if (frameOption) {
+          nestedOptionTitle = frameOption.title;
+          totalPrice += frameOption.price * quantity;
+        }
+      }
+      
+      return {
+        title: option.title,
+        quantity: quantity,
+        nestedOption: nestedOptionTitle,
+        price: totalPrice
+      };
+    }).filter(Boolean);
+    
+    return summary;
   };
 
   const getOptionsTotal = () => {
@@ -284,7 +322,8 @@ const Booking: React.FC = () => {
                   옵션 선택
                 </h2>
                 <p className="text-merrymoment-brown font-pretendard">
-                  필요한 추가 옵션을 선택해주세요.
+                  필요한 추가 옵션을 선택해주세요. 
+                  <br />(모든 옵션은 촬영 전 변경 가능)
                 </p>
               </div>
               
@@ -331,7 +370,8 @@ const Booking: React.FC = () => {
               <div className="mb-8">
                 <PriceCalculator 
                   basePrice={getBasePrice()} 
-                  optionsTotal={getOptionsTotal()} 
+                  optionsTotal={getOptionsTotal()}
+                  selectedOptions={getOptionsSummary()}
                 />
               </div>
             </div>
@@ -401,7 +441,8 @@ const Booking: React.FC = () => {
               <div className="mb-6">
                 <PriceCalculator 
                   basePrice={getBasePrice()} 
-                  optionsTotal={getOptionsTotal()} 
+                  optionsTotal={getOptionsTotal()}
+                  selectedOptions={getOptionsSummary()} 
                 />
               </div>
             </div>
@@ -459,35 +500,13 @@ const Booking: React.FC = () => {
                       <span className="text-merrymoment-brown">추가 옵션:</span>
                       <div className="col-span-2">
                         <ul className="list-disc pl-5 space-y-1">
-                          {selectedOptions.map((optionId) => {
-                            const option = addOnOptions.find((opt) => opt.id === optionId);
-                            if (!option) return null;
-                            
-                            let optionText = option.title;
-                            const quantity = optionQuantities[optionId] || 1;
-                            
-                            // Add quantity if applicable
-                            if (option.hasQuantity && quantity > 1) {
-                              optionText += ` (${quantity}개)`;
-                            }
-                            
-                            // Add nested option details
-                            if (option.id === 7 && selectedNestedOptions.album) { // Album
-                              const albumOption = albumSizeOptions.find(opt => opt.id === selectedNestedOptions.album);
-                              if (albumOption) {
-                                optionText += ` - ${albumOption.title}`;
-                              }
-                            } else if (option.id === 8 && selectedNestedOptions.frame) { // Frame
-                              const frameOption = frameSizeOptions.find(opt => opt.id === selectedNestedOptions.frame);
-                              if (frameOption) {
-                                optionText += ` - ${frameOption.title}`;
-                              }
-                            }
-                            
-                            return (
-                              <li key={option.id}>{optionText}</li>
-                            );
-                          })}
+                          {getOptionsSummary().map((option, index) => (
+                            <li key={index}>
+                              {option.title}
+                              {option.quantity && option.quantity > 1 ? ` (${option.quantity}개)` : ''}
+                              {option.nestedOption ? ` - ${option.nestedOption}` : ''}
+                            </li>
+                          ))}
                         </ul>
                       </div>
                     </div>
@@ -498,7 +517,8 @@ const Booking: React.FC = () => {
               <div className="mb-8">
                 <PriceCalculator 
                   basePrice={getBasePrice()} 
-                  optionsTotal={getOptionsTotal()} 
+                  optionsTotal={getOptionsTotal()}
+                  selectedOptions={getOptionsSummary()}
                 />
               </div>
               
