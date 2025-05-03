@@ -4,8 +4,8 @@ import { Plus, Minus } from 'lucide-react';
 
 interface QuantitySelectorProps {
   quantity: number;
-  onIncrease: () => void;
-  onDecrease: () => void;
+  onIncrease: (e?: React.MouseEvent) => void;
+  onDecrease: (e?: React.MouseEvent) => void;
   minQuantity?: number;
   maxQuantity?: number;
   label?: string;
@@ -19,6 +19,16 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
   maxQuantity = 10,
   label
 }) => {
+  const handleIncrease = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling
+    onIncrease(e);
+  };
+
+  const handleDecrease = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling
+    onDecrease(e);
+  };
+
   return (
     <div className="flex flex-col space-y-1 mt-2">
       {label && <p className="text-xs text-merrymoment-brown font-pretendard">{label}</p>}
@@ -26,18 +36,18 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
         <button 
           type="button"
           className="quantity-button" 
-          onClick={onDecrease}
+          onClick={handleDecrease}
           disabled={quantity <= minQuantity}
         >
           <Minus className="h-3 w-3" />
         </button>
-        <div className="quantity-display">
+        <div className="quantity-display font-pretendard">
           {quantity}
         </div>
         <button 
           type="button"
           className="quantity-button" 
-          onClick={onIncrease}
+          onClick={handleIncrease}
           disabled={quantity >= maxQuantity}
         >
           <Plus className="h-3 w-3" />

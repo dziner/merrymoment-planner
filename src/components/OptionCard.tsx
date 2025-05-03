@@ -57,15 +57,15 @@ const OptionCard: React.FC<OptionCardProps> = ({
     }
   };
 
-  const handleIncrease = (e: MouseEvent) => {
-    e.stopPropagation();
+  const handleIncrease = (e?: MouseEvent) => {
+    if (e) e.stopPropagation();
     if (onQuantityChange && quantity < 10) {
       onQuantityChange(quantity + 1);
     }
   };
 
-  const handleDecrease = (e: MouseEvent) => {
-    e.stopPropagation();
+  const handleDecrease = (e?: MouseEvent) => {
+    if (e) e.stopPropagation();
     if (onQuantityChange && quantity > 1) {
       onQuantityChange(quantity - 1);
     }
@@ -91,8 +91,8 @@ const OptionCard: React.FC<OptionCardProps> = ({
         {isSelected && hasQuantity && onQuantityChange && !nestedOptions && (
           <QuantitySelector
             quantity={quantity}
-            onIncrease={(e) => handleIncrease(e as unknown as MouseEvent)}
-            onDecrease={(e) => handleDecrease(e as unknown as MouseEvent)}
+            onIncrease={handleIncrease}
+            onDecrease={handleDecrease}
           />
         )}
       </div>
@@ -123,8 +123,8 @@ const OptionCard: React.FC<OptionCardProps> = ({
               <QuantitySelector
                 label="수량"
                 quantity={quantity}
-                onIncrease={() => onQuantityChange(quantity + 1)}
-                onDecrease={() => onQuantityChange(quantity - 1)}
+                onIncrease={handleIncrease}
+                onDecrease={handleDecrease}
               />
             </div>
           )}
