@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import StepIndicator from '@/components/StepIndicator';
@@ -21,7 +21,7 @@ const packageData = {
       { text: "10장 보정본 제공" },
       { text: "모든 원본 사진 (ZIP)" },
       { text: "아기 한복 대여 포함" },
-      { text: "기본 꽃관 포함" },
+      { text: "기본 화관 포함" }, // Updated from 꽃관 to 화관
       { text: "모바일 갤러리 포함" },
     ],
   },
@@ -35,11 +35,24 @@ const packageData = {
       { text: "프리미엄 액자 1개 포함" },
       { text: "모든 원본 사진 (ZIP)" },
       { text: "아기 한복 대여 포함" },
-      { text: "기본 꽃관 포함" },
+      { text: "기본 화관 포함" }, // Updated from 꽃관 to 화관
       { text: "모바일 갤러리 포함" },
     ],
   }
 };
+
+// Frame size options
+const frameSizeOptions = [
+  { id: 'frame-4x6', title: '4x6 사이즈', price: 0 },
+  { id: 'frame-5x7', title: '5x7 사이즈', price: 20000 }
+];
+
+// Album size options
+const albumSizeOptions = [
+  { id: 'album-8x11', title: '8x11 사이즈', price: 0 },
+  { id: 'album-11x14', title: '11x14 사이즈', price: 30000 },
+  { id: 'album-mini', title: '미니앨범', price: -20000 }
+];
 
 const addOnOptions = [
   { id: 1, title: "보정본 5장 추가", price: 70000 },
@@ -47,9 +60,9 @@ const addOnOptions = [
   { id: 3, title: "추가 인원", price: 50000 },
   { id: 4, title: "쌍둥이 촬영", price: 60000 },
   { id: 5, title: "백일/돌상 세팅", price: 100000 },
-  { id: 6, title: "생화 꽃관", price: 50000 },
-  { id: 7, title: "하드커버 앨범", price: 120000 },
-  { id: 8, title: "프리미엄 액자 추가", price: 90000 },
+  { id: 6, title: "생화 화관", price: 50000 }, // Updated from 꽃관 to 화관
+  { id: 7, title: "하드커버 앨범", price: 120000, hasNestedOptions: true, optionsType: 'album' },
+  { id: 8, title: "프리미엄 액자 추가", price: 90000, hasNestedOptions: true, optionsType: 'frame' },
 ];
 
 const steps = ["패키지 선택", "옵션 선택", "정보 입력", "예약 완료"];
@@ -59,6 +72,10 @@ const Booking: React.FC = () => {
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [isWeekend, setIsWeekend] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
+  const [selectedNestedOptions, setSelectedNestedOptions] = useState<Record<string, string | null>>({
+    'album': null,
+    'frame': null
+  });
   const [contactInfo, setContactInfo] = useState({
     name: "",
     phone: "",
@@ -67,16 +84,40 @@ const Booking: React.FC = () => {
   
   const { toast } = useToast();
 
+  useEffect(() => {
+    // This will ensure the progress bar is properly updated
+    document.title = `MerryMoment - ${steps[currentStep]}`;
+  }, [currentStep]);
+
   const handlePackageSelect = (packageName: string) => {
     setSelectedPackage(packageName);
   };
 
   const handleOptionToggle = (optionId: number) => {
-    setSelectedOptions((prev) =>
-      prev.includes(optionId)
-        ? prev.filter((id) => id !== optionId)
-        : [...prev, optionId]
-    );
+    setSelectedOptions((prev) => {
+      const isAlreadySelected = prev.includes(optionId);
+      
+      // If deselecting an option with nested options, clear its nested selection
+      if (isAlreadySelected) {
+        const option = addOnOptions.find(opt => opt.id === optionId);
+        if (option?.optionsType) {
+          setSelectedNestedOptions(prev => ({
+            ...prev,
+            [option.optionsType]: null
+          }));
+        }
+        return prev.filter((id) => id !== optionId);
+      } else {
+        return [...prev, optionId];
+      }
+    });
+  };
+
+  const handleNestedOptionSelect = (optionType: string, optionId: string) => {
+    setSelectedNestedOptions(prev => ({
+      ...prev,
+      [optionType]: optionId
+    }));
   };
 
   const handleWeekendToggle = (weekend: boolean) => {
@@ -99,10 +140,27 @@ const Booking: React.FC = () => {
   };
 
   const getOptionsTotal = () => {
-    return selectedOptions.reduce((total, optionId) => {
+    let optionsTotal = selectedOptions.reduce((total, optionId) => {
       const option = addOnOptions.find((opt) => opt.id === optionId);
       return total + (option?.price || 0);
     }, 0);
+
+    // Add nested option prices
+    if (selectedOptions.includes(7) && selectedNestedOptions.album) {
+      const albumOption = albumSizeOptions.find(opt => opt.id === selectedNestedOptions.album);
+      if (albumOption) {
+        optionsTotal += albumOption.price;
+      }
+    }
+
+    if (selectedOptions.includes(8) && selectedNestedOptions.frame) {
+      const frameOption = frameSizeOptions.find(opt => opt.id === selectedNestedOptions.frame);
+      if (frameOption) {
+        optionsTotal += frameOption.price;
+      }
+    }
+
+    return optionsTotal;
   };
 
   const handleNextStep = () => {
@@ -156,7 +214,7 @@ const Booking: React.FC = () => {
           {currentStep === 0 && (
             <div className="animate-fade-in">
               <div className="mb-6 text-center">
-                <h2 className="text-2xl font-serif text-merrymoment-darkbrown mb-2">
+                <h2 className="text-2xl font-brandon text-merrymoment-darkbrown mb-2">
                   패키지 선택
                 </h2>
                 <p className="text-merrymoment-brown">
@@ -197,7 +255,7 @@ const Booking: React.FC = () => {
           {currentStep === 1 && (
             <div className="animate-fade-in">
               <div className="mb-6 text-center">
-                <h2 className="text-2xl font-serif text-merrymoment-darkbrown mb-2">
+                <h2 className="text-2xl font-brandon text-merrymoment-darkbrown mb-2">
                   옵션 선택
                 </h2>
                 <p className="text-merrymoment-brown">
@@ -206,15 +264,36 @@ const Booking: React.FC = () => {
               </div>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                {addOnOptions.map((option) => (
-                  <OptionCard
-                    key={option.id}
-                    title={option.title}
-                    price={option.price}
-                    isSelected={selectedOptions.includes(option.id)}
-                    onClick={() => handleOptionToggle(option.id)}
-                  />
-                ))}
+                {addOnOptions.map((option) => {
+                  const hasNestedOptions = option.hasNestedOptions && option.optionsType;
+                  let nestedOptions = null;
+                  let selectedNestedOption = null;
+                  
+                  if (hasNestedOptions) {
+                    if (option.optionsType === 'frame') {
+                      nestedOptions = frameSizeOptions;
+                      selectedNestedOption = selectedNestedOptions.frame;
+                    } else if (option.optionsType === 'album') {
+                      nestedOptions = albumSizeOptions;
+                      selectedNestedOption = selectedNestedOptions.album;
+                    }
+                  }
+                  
+                  return (
+                    <OptionCard
+                      key={option.id}
+                      title={option.title}
+                      price={option.price}
+                      isSelected={selectedOptions.includes(option.id)}
+                      onClick={() => handleOptionToggle(option.id)}
+                      nestedOptions={hasNestedOptions ? nestedOptions : undefined}
+                      selectedNestedOption={hasNestedOptions ? selectedNestedOption : undefined}
+                      onNestedOptionSelect={hasNestedOptions && option.optionsType 
+                        ? (optionId) => handleNestedOptionSelect(option.optionsType!, optionId) 
+                        : undefined}
+                    />
+                  );
+                })}
               </div>
               
               <div className="mb-8">
@@ -230,7 +309,7 @@ const Booking: React.FC = () => {
           {currentStep === 2 && (
             <div className="animate-fade-in">
               <div className="mb-6 text-center">
-                <h2 className="text-2xl font-serif text-merrymoment-darkbrown mb-2">
+                <h2 className="text-2xl font-brandon text-merrymoment-darkbrown mb-2">
                   정보 입력
                 </h2>
                 <p className="text-merrymoment-brown">
@@ -300,7 +379,7 @@ const Booking: React.FC = () => {
           {currentStep === 3 && (
             <div className="animate-fade-in">
               <div className="mb-6 text-center">
-                <h2 className="text-2xl font-serif text-merrymoment-darkbrown mb-2">
+                <h2 className="text-2xl font-brandon text-merrymoment-darkbrown mb-2">
                   예약 완료
                 </h2>
                 <p className="text-merrymoment-brown">
@@ -350,9 +429,26 @@ const Booking: React.FC = () => {
                         <ul className="list-disc pl-5 space-y-1">
                           {selectedOptions.map((optionId) => {
                             const option = addOnOptions.find((opt) => opt.id === optionId);
-                            return option ? (
-                              <li key={option.id}>{option.title}</li>
-                            ) : null;
+                            if (!option) return null;
+                            
+                            let optionText = option.title;
+                            
+                            // Add nested option details
+                            if (option.id === 7 && selectedNestedOptions.album) { // Album
+                              const albumOption = albumSizeOptions.find(opt => opt.id === selectedNestedOptions.album);
+                              if (albumOption) {
+                                optionText += ` (${albumOption.title})`;
+                              }
+                            } else if (option.id === 8 && selectedNestedOptions.frame) { // Frame
+                              const frameOption = frameSizeOptions.find(opt => opt.id === selectedNestedOptions.frame);
+                              if (frameOption) {
+                                optionText += ` (${frameOption.title})`;
+                              }
+                            }
+                            
+                            return (
+                              <li key={option.id}>{optionText}</li>
+                            );
                           })}
                         </ul>
                       </div>

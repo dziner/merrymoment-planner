@@ -73,6 +73,7 @@ export default {
 			fontFamily: {
 				sans: ['Pretendard', 'sans-serif'],
 				serif: ['"Noto Serif KR"', 'serif'],
+				brandon: ['brandon-grotesque', 'sans-serif'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
