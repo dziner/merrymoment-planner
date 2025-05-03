@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -15,19 +14,20 @@ import { useToast } from "@/components/ui/use-toast";
 const packageData = {
   merryBasic: {
     title: "메리 베이직",
+    englishTitle: "merry.Basic",
     weekdayPrice: 590000,
     weekendPrice: 640000,
     features: [
       { text: "60분 촬영" },
       { text: "10장 보정본 제공" },
       { text: "모든 원본 사진 (ZIP)" },
-      { text: "아기 한복 대여 포함" },
       { text: "기본 화관 포함" },
       { text: "모바일 갤러리 포함" },
     ],
   },
   momentPremium: {
     title: "모먼트 프리미엄",
+    englishTitle: "merry.Premium",
     weekdayPrice: 790000,
     weekendPrice: 850000,
     features: [
@@ -35,7 +35,6 @@ const packageData = {
       { text: "20장 보정본 제공" },
       { text: "프리미엄 액자 1개 포함" },
       { text: "모든 원본 사진 (ZIP)" },
-      { text: "아기 한복 대여 포함" },
       { text: "기본 화관 포함" },
       { text: "모바일 갤러리 포함" },
     ],
@@ -64,7 +63,7 @@ const addOnOptions = [
   { id: 5, title: "백일/돌상 세팅", price: 100000 },
   { id: 6, title: "생화 화관", price: 50000 },
   { id: 7, title: "하드커버 앨범", price: 120000, hasNestedOptions: true, optionsType: 'album', hasQuantity: true },
-  { id: 8, title: "프리미엄 액자 추가", price: 90000, hasNestedOptions: true, optionsType: 'frame', hasQuantity: true },
+  { id: 8, title: "프리미엄 액자", price: 90000, hasNestedOptions: true, optionsType: 'frame', hasQuantity: true },
 ];
 
 const steps = ["패키지 선택", "옵션 선택", "정보 입력", "예약 완료"];
@@ -135,13 +134,38 @@ const Booking: React.FC = () => {
       ...prev,
       [optionType]: optionId
     }));
+    
+    // Reset quantity to 1 when selecting a new nested option
+    const parentOptionId = optionType === 'album' ? 7 : 8;
+    setOptionQuantities(prev => ({
+      ...prev,
+      [parentOptionId]: 1
+    }));
   };
   
   const handleQuantityChange = (optionId: number, quantity: number) => {
-    setOptionQuantities(prev => ({
-      ...prev,
-      [optionId]: quantity
-    }));
+    if (quantity === 0) {
+      // If quantity is 0, remove the option
+      const option = addOnOptions.find(opt => opt.id === optionId);
+      if (option?.optionsType) {
+        setSelectedNestedOptions(prev => ({
+          ...prev,
+          [option.optionsType!]: null
+        }));
+      }
+      
+      setSelectedOptions(prev => prev.filter(id => id !== optionId));
+      setOptionQuantities(prev => {
+        const newQuantities = {...prev};
+        delete newQuantities[optionId];
+        return newQuantities;
+      });
+    } else {
+      setOptionQuantities(prev => ({
+        ...prev,
+        [optionId]: quantity
+      }));
+    }
   };
 
   const handleWeekendToggle = (weekend: boolean) => {
@@ -170,6 +194,8 @@ const Booking: React.FC = () => {
       if (!option) return null;
       
       const quantity = optionQuantities[optionId] || 1;
+      if (quantity <= 0) return null;
+      
       let nestedOptionTitle = null;
       let totalPrice = option.price * quantity;
       
@@ -293,6 +319,7 @@ const Booking: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <PackageCard
                   title={packageData.merryBasic.title}
+                  englishTitle={packageData.merryBasic.englishTitle}
                   weekdayPrice={packageData.merryBasic.weekdayPrice}
                   weekendPrice={packageData.merryBasic.weekendPrice}
                   isWeekend={isWeekend}
@@ -303,6 +330,7 @@ const Booking: React.FC = () => {
                 
                 <PackageCard
                   title={packageData.momentPremium.title}
+                  englishTitle={packageData.momentPremium.englishTitle}
                   weekdayPrice={packageData.momentPremium.weekdayPrice}
                   weekendPrice={packageData.momentPremium.weekendPrice}
                   isWeekend={isWeekend}
@@ -323,7 +351,7 @@ const Booking: React.FC = () => {
                 </h2>
                 <p className="text-merrymoment-brown font-pretendard">
                   필요한 추가 옵션을 선택해주세요. 
-                  <br />(모든 옵션은 촬영 전 변경 가능)
+                  <br />(모든 옵션은 촬영 전 변경 가능합니다.)
                 </p>
               </div>
               

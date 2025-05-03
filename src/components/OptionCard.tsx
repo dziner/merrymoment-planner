@@ -43,7 +43,9 @@ const OptionCard: React.FC<OptionCardProps> = ({
         onClick();
         setIsExpanded(true);
       } else {
-        setIsExpanded(!isExpanded);
+        // Toggle the selection off if already selected
+        onClick();
+        setIsExpanded(false);
       }
     } else {
       onClick();
@@ -66,7 +68,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
 
   const handleDecrease = (e?: MouseEvent) => {
     if (e) e.stopPropagation();
-    if (onQuantityChange && quantity > 1) {
+    if (onQuantityChange && quantity > 0) { // Changed from quantity > 1 to quantity > 0
       onQuantityChange(quantity - 1);
     }
   };
@@ -93,6 +95,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
             quantity={quantity}
             onIncrease={handleIncrease}
             onDecrease={handleDecrease}
+            minQuantity={0} // Change to 0 to allow deselecting by reducing to 0
           />
         )}
       </div>
@@ -125,6 +128,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
                 quantity={quantity}
                 onIncrease={handleIncrease}
                 onDecrease={handleDecrease}
+                minQuantity={0} // Change to 0 to allow deselecting by reducing to 0
               />
             </div>
           )}
