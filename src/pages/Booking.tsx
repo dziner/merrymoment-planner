@@ -56,6 +56,11 @@ const Booking: React.FC = () => {
     frameSizeOptions
   );
   
+  // Wrap calculation methods in functions to match expected prop types
+  const getBasePriceFunc = () => getBasePrice;
+  const getOptionsTotalFunc = () => getOptionsTotal;
+  const getOptionsSummaryFunc = () => getOptionsSummary;
+  
   // Get navigation handlers
   const { handleNextStep, handlePrevStep, handleExternalBooking } = useBookingNavigation(
     currentStep,
@@ -102,9 +107,9 @@ const Booking: React.FC = () => {
               onNestedOptionClear={clearNestedOptions}
               optionQuantities={optionQuantities}
               onQuantityChange={(optionId, quantity) => handleQuantityChange(optionId, quantity, addOnOptions)}
-              getBasePrice={getBasePrice}
-              getOptionsTotal={getOptionsTotal}
-              getOptionsSummary={getOptionsSummary}
+              getBasePrice={() => getBasePrice}
+              getOptionsTotal={() => getOptionsTotal}
+              getOptionsSummary={() => getOptionsSummary}
               albumSizeOptions={albumSizeOptions}
               frameSizeOptions={frameSizeOptions}
             />
@@ -118,9 +123,9 @@ const Booking: React.FC = () => {
               isWeekend={isWeekend}
               contactInfo={contactInfo}
               handleInputChange={handleInputChange}
-              getBasePrice={getBasePrice}
-              getOptionsTotal={getOptionsTotal}
-              getOptionsSummary={getOptionsSummary}
+              getBasePrice={() => getBasePrice}
+              getOptionsTotal={() => getOptionsTotal}
+              getOptionsSummary={() => getOptionsSummary}
             />
           )}
           
@@ -131,9 +136,9 @@ const Booking: React.FC = () => {
               selectedPackage={selectedPackage}
               packageData={packageData}
               isWeekend={isWeekend}
-              getBasePrice={getBasePrice}
-              getOptionsTotal={getOptionsTotal}
-              getOptionsSummary={getOptionsSummary}
+              getBasePrice={() => getBasePrice}
+              getOptionsTotal={() => getOptionsTotal}
+              getOptionsSummary={() => getOptionsSummary}
               handleExternalBooking={handleExternalBooking}
             />
           )}
