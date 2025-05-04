@@ -3,7 +3,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 export function useBookingNavigation(
   currentStep: number, 
-  setCurrentStep: (step: number) => void,
+  setCurrentStep: (step: number | ((prev: number) => number)) => void,
   selectedPackage: string | null,
   contactInfo: { name: string; phone: string; email: string }
 ) {
@@ -26,12 +26,12 @@ export function useBookingNavigation(
       return;
     }
     
-    setCurrentStep((prev) => prev + 1);
+    setCurrentStep(currentStep + 1);
   };
 
   const handlePrevStep = () => {
     if (currentStep > 0) {
-      setCurrentStep((prev) => prev - 1);
+      setCurrentStep(currentStep - 1);
     }
   };
 
