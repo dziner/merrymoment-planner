@@ -6,64 +6,10 @@ import PackageCard from '@/components/PackageCard';
 import WeekdayToggle from '@/components/WeekdayToggle';
 import OptionCard from '@/components/OptionCard';
 import PriceCalculator from '@/components/PriceCalculator';
+import SelectedPackageInfo from '@/components/SelectedPackageInfo';
+import { usePackages, useOptions, useAlbumSizes, useFrameSizes } from '@/services/dataService';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/components/ui/use-toast";
-
-// Package and option data
-const packageData = {
-  merryBasic: {
-    title: "메리 베이직",
-    englishTitle: "merry.Basic",
-    weekdayPrice: 590000,
-    weekendPrice: 640000,
-    features: [
-      { text: "60분 촬영" },
-      { text: "10장 보정본 제공" },
-      { text: "모든 원본 사진 (ZIP)" },
-      { text: "기본 화관 포함" },
-      { text: "모바일 갤러리 포함" },
-    ],
-  },
-  momentPremium: {
-    title: "모먼트 프리미엄",
-    englishTitle: "merry.Premium",
-    weekdayPrice: 790000,
-    weekendPrice: 850000,
-    features: [
-      { text: "90분 촬영" },
-      { text: "20장 보정본 제공" },
-      { text: "프리미엄 액자 1개 포함" },
-      { text: "모든 원본 사진 (ZIP)" },
-      { text: "기본 화관 포함" },
-      { text: "모바일 갤러리 포함" },
-    ],
-  }
-};
-
-// Frame size options
-const frameSizeOptions = [
-  { id: 'frame-4x6', title: '4x6 사이즈', price: 0 },
-  { id: 'frame-5x7', title: '5x7 사이즈', price: 20000 }
-];
-
-// Album size options
-const albumSizeOptions = [
-  { id: 'album-8x11', title: '8x11 사이즈', price: 0 },
-  { id: 'album-11x14', title: '11x14 사이즈', price: 30000 },
-  { id: 'album-mini', title: '미니앨범', price: -20000 }
-];
-
-// Add on options
-const addOnOptions = [
-  { id: 1, title: "보정본 5장 추가", price: 70000 },
-  { id: 2, title: "보정본 10장 추가", price: 120000 },
-  { id: 3, title: "추가 인원", price: 50000, hasQuantity: true },
-  { id: 4, title: "쌍둥이 촬영", price: 60000 },
-  { id: 5, title: "백일/돌상 세팅", price: 100000 },
-  { id: 6, title: "생화 화관", price: 50000 },
-  { id: 7, title: "하드커버 앨범", price: 120000, hasNestedOptions: true, optionsType: 'album', hasQuantity: true },
-  { id: 8, title: "프리미엄 액자", price: 90000, hasNestedOptions: true, optionsType: 'frame', hasQuantity: true },
-];
 
 const steps = ["패키지 선택", "옵션 선택", "정보 입력", "예약 완료"];
 
@@ -84,6 +30,12 @@ const Booking: React.FC = () => {
   });
   
   const { toast } = useToast();
+  
+  // Fetch dynamic data using our custom hooks
+  const { data: packageData } = usePackages();
+  const { data: addOnOptions } = useOptions();
+  const { data: albumSizeOptions } = useAlbumSizes();
+  const { data: frameSizeOptions } = useFrameSizes();
 
   useEffect(() => {
     // This will ensure the progress bar is properly updated
@@ -142,7 +94,7 @@ const Booking: React.FC = () => {
         delete newTypeOptions[optionId];
         updatedOptions[optionType] = newTypeOptions;
       } else {
-        // Otherwise update the quantity
+        // Otherwise update the quantity - ensure we don't modify other options
         updatedOptions[optionType] = {
           ...updatedOptions[optionType],
           [optionId]: quantity
@@ -187,9 +139,8 @@ const Booking: React.FC = () => {
   const getBasePrice = () => {
     if (!selectedPackage) return 0;
     
-    const packageInfo = selectedPackage === "merryBasic" 
-      ? packageData.merryBasic 
-      : packageData.momentPremium;
+    const packageInfo = packageData[selectedPackage];
+    if (!packageInfo) return 0;
       
     return isWeekend ? packageInfo.weekendPrice : packageInfo.weekdayPrice;
   };
@@ -340,27 +291,19 @@ const Booking: React.FC = () => {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <PackageCard
-                  title={packageData.merryBasic.title}
-                  englishTitle={packageData.merryBasic.englishTitle}
-                  weekdayPrice={packageData.merryBasic.weekdayPrice}
-                  weekendPrice={packageData.merryBasic.weekendPrice}
-                  isWeekend={isWeekend}
-                  features={packageData.merryBasic.features}
-                  isSelected={selectedPackage === "merryBasic"}
-                  onClick={() => handlePackageSelect("merryBasic")}
-                />
-                
-                <PackageCard
-                  title={packageData.momentPremium.title}
-                  englishTitle={packageData.momentPremium.englishTitle}
-                  weekdayPrice={packageData.momentPremium.weekdayPrice}
-                  weekendPrice={packageData.momentPremium.weekendPrice}
-                  isWeekend={isWeekend}
-                  features={packageData.momentPremium.features}
-                  isSelected={selectedPackage === "momentPremium"}
-                  onClick={() => handlePackageSelect("momentPremium")}
-                />
+                {Object.values(packageData).map(pkg => (
+                  <PackageCard
+                    key={pkg.id}
+                    title={pkg.title}
+                    englishTitle={pkg.englishTitle}
+                    weekdayPrice={pkg.weekdayPrice}
+                    weekendPrice={pkg.weekendPrice}
+                    isWeekend={isWeekend}
+                    features={pkg.features}
+                    isSelected={selectedPackage === pkg.id}
+                    onClick={() => handlePackageSelect(pkg.id)}
+                  />
+                ))}
               </div>
             </div>
           )}
@@ -377,6 +320,17 @@ const Booking: React.FC = () => {
                   <br />(모든 옵션은 촬영 전 변경 가능합니다.)
                 </p>
               </div>
+              
+              {/* Selected Package Info Display */}
+              {selectedPackage && packageData[selectedPackage] && (
+                <SelectedPackageInfo
+                  packageTitle={packageData[selectedPackage].title}
+                  englishTitle={packageData[selectedPackage].englishTitle}
+                  price={isWeekend ? packageData[selectedPackage].weekendPrice : packageData[selectedPackage].weekdayPrice}
+                  features={packageData[selectedPackage].features}
+                  isWeekend={isWeekend}
+                />
+              )}
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 {addOnOptions.map((option) => {
@@ -442,6 +396,17 @@ const Booking: React.FC = () => {
                   예약을 위한 연락처 정보를 입력해주세요.
                 </p>
               </div>
+              
+              {/* Show selected package info on this step too */}
+              {selectedPackage && packageData[selectedPackage] && (
+                <SelectedPackageInfo
+                  packageTitle={packageData[selectedPackage].title}
+                  englishTitle={packageData[selectedPackage].englishTitle}
+                  price={isWeekend ? packageData[selectedPackage].weekendPrice : packageData[selectedPackage].weekdayPrice}
+                  features={packageData[selectedPackage].features}
+                  isWeekend={isWeekend}
+                />
+              )}
               
               <div className="space-y-4 mb-8">
                 <div>
@@ -538,9 +503,9 @@ const Booking: React.FC = () => {
                   <div className="grid grid-cols-3 gap-2">
                     <span className="text-merrymoment-brown">패키지:</span>
                     <span className="col-span-2">
-                      {selectedPackage === "merryBasic" 
-                        ? packageData.merryBasic.title 
-                        : packageData.momentPremium.title}
+                      {selectedPackage && packageData[selectedPackage] 
+                        ? packageData[selectedPackage].title 
+                        : ''}
                     </span>
                   </div>
                   
