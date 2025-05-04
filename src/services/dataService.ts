@@ -163,7 +163,7 @@ const transformSizeOptions = (rawData: any[]): SizeOption[] => {
 };
 
 // Google Sheets IDs and sheet names - these would be configurable in a real app
-const SHEET_ID = '1tAoqFzQZDEc2zMChz9j37K8wgxKKyPjvAlewNC6oL_A'; // Example ID, replace with your actual sheet ID
+const SHEET_ID = '1GqfPV6RxQWyR-FHBd4ErTnhsHqujTAtDC9CE6wkRPOg'; // Example ID, replace with your actual sheet ID
 const PACKAGES_SHEET_NAME = 'Packages';
 const OPTIONS_SHEET_NAME = 'Options';
 const ALBUM_SIZES_SHEET_NAME = 'AlbumSizes';
