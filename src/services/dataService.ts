@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 
 // Types for our dynamic data
@@ -108,16 +107,8 @@ const parseCSV = (csv: string) => {
     const obj: Record<string, any> = {};
     
     headers.forEach((header, index) => {
-      // Try to parse numbers and booleans
-      let value = values[index] || '';
-      if (!isNaN(Number(value))) {
-        value = Number(value);
-      } else if (value.toLowerCase() === 'true') {
-        value = true;
-      } else if (value.toLowerCase() === 'false') {
-        value = false;
-      }
-      obj[header] = value;
+      // Keep all values as strings initially
+      obj[header] = values[index] || '';
     });
     
     return obj;
@@ -159,7 +150,7 @@ const transformOptionData = (rawData: any[]): OptionData[] => {
     price: Number(item.price) || 0,
     hasQuantity: item.hasQuantity === 'true' || item.hasQuantity === true,
     hasNestedOptions: item.hasNestedOptions === 'true' || item.hasNestedOptions === true,
-    optionsType: item.optionsType || undefined,
+    optionsType: (item.optionsType === 'album' || item.optionsType === 'frame') ? item.optionsType : undefined,
   }));
 };
 
