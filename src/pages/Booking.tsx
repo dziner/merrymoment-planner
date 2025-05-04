@@ -44,7 +44,7 @@ const Booking: React.FC = () => {
   const { data: frameSizeOptions } = useFrameSizes();
   
   // Get price calculations
-  const { getBasePrice, getOptionsSummary, getOptionsTotal } = useBookingCalculations(
+  const { getBasePrice, getOptionsTotal, getOptionsSummary } = useBookingCalculations(
     selectedPackage,
     packageData,
     isWeekend,
@@ -102,9 +102,9 @@ const Booking: React.FC = () => {
               onNestedOptionClear={clearNestedOptions}
               optionQuantities={optionQuantities}
               onQuantityChange={(optionId, quantity) => handleQuantityChange(optionId, quantity, addOnOptions)}
-              getBasePrice={() => getBasePrice()}
-              getOptionsTotal={() => getOptionsTotal()}
-              getOptionsSummary={() => getOptionsSummary()}
+              getBasePrice={getBasePrice}
+              getOptionsTotal={getOptionsTotal}
+              getOptionsSummary={getOptionsSummary}
               albumSizeOptions={albumSizeOptions}
               frameSizeOptions={frameSizeOptions}
             />
@@ -118,9 +118,9 @@ const Booking: React.FC = () => {
               isWeekend={isWeekend}
               contactInfo={contactInfo}
               handleInputChange={handleInputChange}
-              getBasePrice={() => getBasePrice()}
-              getOptionsTotal={() => getOptionsTotal()}
-              getOptionsSummary={() => getOptionsSummary()}
+              getBasePrice={getBasePrice}
+              getOptionsTotal={getOptionsTotal}
+              getOptionsSummary={getOptionsSummary}
             />
           )}
           
@@ -131,9 +131,9 @@ const Booking: React.FC = () => {
               selectedPackage={selectedPackage}
               packageData={packageData}
               isWeekend={isWeekend}
-              getBasePrice={() => getBasePrice()}
-              getOptionsTotal={() => getOptionsTotal()}
-              getOptionsSummary={() => getOptionsSummary()}
+              getBasePrice={getBasePrice}
+              getOptionsTotal={getOptionsTotal}
+              getOptionsSummary={getOptionsSummary}
               handleExternalBooking={handleExternalBooking}
             />
           )}
