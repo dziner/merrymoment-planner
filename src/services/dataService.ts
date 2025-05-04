@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Types for our dynamic data
 export interface PackageData {
@@ -183,7 +184,7 @@ export function usePackages() {
       }
     },
     initialData: defaultPackages,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 60000, // Reduced to 1 minute
   });
 }
 
@@ -200,7 +201,7 @@ export function useOptions() {
       }
     },
     initialData: defaultOptions,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 60000, // Reduced to 1 minute
   });
 }
 
@@ -217,7 +218,7 @@ export function useAlbumSizes() {
       }
     },
     initialData: defaultAlbumOptions,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 60000, // Reduced to 1 minute
   });
 }
 
@@ -233,7 +234,21 @@ export function useFrameSizes() {
         return defaultFrameOptions;
       }
     },
-    initialData: defaultFrameOptions,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    initialData: defaultFrameOptions, 
+    staleTime: 60000, // Reduced to 1 minute
   });
+}
+
+// New function to refresh all data
+export function useDataRefresh() {
+  const queryClient = useQueryClient();
+  
+  const refreshAllData = () => {
+    queryClient.invalidateQueries({ queryKey: ['packages'] });
+    queryClient.invalidateQueries({ queryKey: ['options'] });
+    queryClient.invalidateQueries({ queryKey: ['albumSizes'] });
+    queryClient.invalidateQueries({ queryKey: ['frameSizes'] });
+  };
+  
+  return { refreshAllData };
 }
