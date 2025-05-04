@@ -1,4 +1,3 @@
-
 import React, { useState, MouseEvent } from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -16,8 +15,9 @@ interface OptionCardProps {
   isSelected: boolean;
   onClick: () => void;
   nestedOptions?: NestedOption[];
-  selectedNestedOption?: string | null;
-  onNestedOptionSelect?: (optionId: string) => void;
+  selectedNestedOptions?: Record<string, number> | null;
+  onNestedOptionSelect?: (optionId: string, quantity: number) => void;
+  onNestedOptionClear?: () => void;
   hasQuantity?: boolean;
   quantity?: number;
   onQuantityChange?: (quantity: number) => void;
@@ -29,8 +29,9 @@ const OptionCard: React.FC<OptionCardProps> = ({
   isSelected,
   onClick,
   nestedOptions,
-  selectedNestedOption,
+  selectedNestedOptions,
   onNestedOptionSelect,
+  onNestedOptionClear,
   hasQuantity = false,
   quantity = 1,
   onQuantityChange
@@ -44,6 +45,9 @@ const OptionCard: React.FC<OptionCardProps> = ({
         setIsExpanded(true);
       } else {
         // Toggle the selection off if already selected
+        if (onNestedOptionClear) {
+          onNestedOptionClear();
+        }
         onClick();
         setIsExpanded(false);
       }
@@ -55,7 +59,16 @@ const OptionCard: React.FC<OptionCardProps> = ({
   const handleNestedOptionClick = (e: MouseEvent, optionId: string) => {
     e.stopPropagation();
     if (onNestedOptionSelect) {
-      onNestedOptionSelect(optionId);
+      const currentQuantity = selectedNestedOptions?.[optionId] || 0;
+      // Initialize with 1 if not already selected, otherwise keep current quantity
+      const newQuantity = currentQuantity === 0 ? 1 : currentQuantity;
+      onNestedOptionSelect(optionId, newQuantity);
+    }
+  };
+
+  const handleNestedQuantityChange = (optionId: string, newQuantity: number) => {
+    if (onNestedOptionSelect) {
+      onNestedOptionSelect(optionId, newQuantity);
     }
   };
 
@@ -68,7 +81,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
 
   const handleDecrease = (e?: MouseEvent) => {
     if (e) e.stopPropagation();
-    if (onQuantityChange && quantity > 0) { // Changed from quantity > 1 to quantity > 0
+    if (onQuantityChange && quantity > 0) {
       onQuantityChange(quantity - 1);
     }
   };
@@ -95,7 +108,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
             quantity={quantity}
             onIncrease={handleIncrease}
             onDecrease={handleDecrease}
-            minQuantity={0} // Change to 0 to allow deselecting by reducing to 0
+            minQuantity={0}
           />
         )}
       </div>
@@ -103,35 +116,47 @@ const OptionCard: React.FC<OptionCardProps> = ({
       {/* Nested options dropdown */}
       {isSelected && isExpanded && nestedOptions && nestedOptions.length > 0 && (
         <div className="mt-2 pl-2 border-l-2 border-merrymoment-beige">
-          {nestedOptions.map(option => (
-            <div 
-              key={option.id}
-              onClick={(e) => handleNestedOptionClick(e, option.id)}
-              className={cn(
-                "py-2 px-3 mb-1 rounded-md cursor-pointer flex justify-between items-center text-sm font-pretendard",
-                selectedNestedOption === option.id 
-                  ? "bg-merrymoment-beige text-merrymoment-darkbrown"
-                  : "bg-merrymoment-cream hover:bg-merrymoment-beige/30"
-              )}
-            >
-              <span>{option.title}</span>
-              {selectedNestedOption === option.id && (
-                <Check className="h-3 w-3 text-merrymoment-darkbrown" />
-              )}
-            </div>
-          ))}
-          
-          {selectedNestedOption && onQuantityChange && (
-            <div className="mt-2 px-3" onClick={(e) => e.stopPropagation()}>
-              <QuantitySelector
-                label="수량"
-                quantity={quantity}
-                onIncrease={handleIncrease}
-                onDecrease={handleDecrease}
-                minQuantity={0} // Change to 0 to allow deselecting by reducing to 0
-              />
-            </div>
-          )}
+          {nestedOptions.map(option => {
+            const isNestedSelected = selectedNestedOptions && selectedNestedOptions[option.id] > 0;
+            const nestedQuantity = selectedNestedOptions?.[option.id] || 0;
+            
+            return (
+              <div key={option.id} className="mb-2">
+                <div 
+                  onClick={(e) => handleNestedOptionClick(e, option.id)}
+                  className={cn(
+                    "py-2 px-3 mb-1 rounded-md cursor-pointer flex justify-between items-center text-sm font-pretendard",
+                    isNestedSelected
+                      ? "bg-merrymoment-beige text-merrymoment-darkbrown"
+                      : "bg-merrymoment-cream hover:bg-merrymoment-beige/30"
+                  )}
+                >
+                  <span>{option.title}</span>
+                  {isNestedSelected && (
+                    <Check className="h-3 w-3 text-merrymoment-darkbrown" />
+                  )}
+                </div>
+                
+                {isNestedSelected && (
+                  <div className="mt-1 px-3" onClick={(e) => e.stopPropagation()}>
+                    <QuantitySelector
+                      label="수량"
+                      quantity={nestedQuantity}
+                      onIncrease={(e) => { 
+                        e?.stopPropagation();
+                        handleNestedQuantityChange(option.id, nestedQuantity + 1);
+                      }}
+                      onDecrease={(e) => {
+                        e?.stopPropagation();
+                        handleNestedQuantityChange(option.id, nestedQuantity - 1);
+                      }}
+                      minQuantity={0}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

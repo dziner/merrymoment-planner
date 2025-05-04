@@ -6,7 +6,6 @@ import PackageCard from '@/components/PackageCard';
 import WeekdayToggle from '@/components/WeekdayToggle';
 import OptionCard from '@/components/OptionCard';
 import PriceCalculator from '@/components/PriceCalculator';
-import QuantitySelector from '@/components/QuantitySelector';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -73,9 +72,9 @@ const Booking: React.FC = () => {
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [isWeekend, setIsWeekend] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
-  const [selectedNestedOptions, setSelectedNestedOptions] = useState<Record<string, string | null>>({
-    'album': null,
-    'frame': null
+  const [selectedNestedOptions, setSelectedNestedOptions] = useState<Record<string, Record<string, number>>>({
+    'album': {},
+    'frame': {}
   });
   const [optionQuantities, setOptionQuantities] = useState<Record<number, number>>({});
   const [contactInfo, setContactInfo] = useState({
@@ -103,10 +102,7 @@ const Booking: React.FC = () => {
       if (isAlreadySelected) {
         const option = addOnOptions.find(opt => opt.id === optionId);
         if (option?.optionsType) {
-          setSelectedNestedOptions(prev => ({
-            ...prev,
-            [option.optionsType]: null
-          }));
+          clearNestedOptions(option.optionsType);
         }
         // Also clear quantity
         setOptionQuantities(prev => {
@@ -118,7 +114,7 @@ const Booking: React.FC = () => {
       } else {
         // When selecting option, set default quantity to 1
         const option = addOnOptions.find(opt => opt.id === optionId);
-        if (option?.hasQuantity) {
+        if (option?.hasQuantity && !option?.hasNestedOptions) {
           setOptionQuantities(prev => ({
             ...prev,
             [optionId]: 1
@@ -129,18 +125,32 @@ const Booking: React.FC = () => {
     });
   };
 
-  const handleNestedOptionSelect = (optionType: string, optionId: string) => {
+  const clearNestedOptions = (optionType: string) => {
     setSelectedNestedOptions(prev => ({
       ...prev,
-      [optionType]: optionId
+      [optionType]: {}
     }));
-    
-    // Reset quantity to 1 when selecting a new nested option
-    const parentOptionId = optionType === 'album' ? 7 : 8;
-    setOptionQuantities(prev => ({
-      ...prev,
-      [parentOptionId]: 1
-    }));
+  };
+
+  const handleNestedOptionSelect = (optionType: string, optionId: string, quantity: number) => {
+    setSelectedNestedOptions(prev => {
+      const updatedOptions = { ...prev };
+      
+      // If quantity is 0, remove the option
+      if (quantity <= 0) {
+        const newTypeOptions = { ...updatedOptions[optionType] };
+        delete newTypeOptions[optionId];
+        updatedOptions[optionType] = newTypeOptions;
+      } else {
+        // Otherwise update the quantity
+        updatedOptions[optionType] = {
+          ...updatedOptions[optionType],
+          [optionId]: quantity
+        };
+      }
+      
+      return updatedOptions;
+    });
   };
   
   const handleQuantityChange = (optionId: number, quantity: number) => {
@@ -148,10 +158,7 @@ const Booking: React.FC = () => {
       // If quantity is 0, remove the option
       const option = addOnOptions.find(opt => opt.id === optionId);
       if (option?.optionsType) {
-        setSelectedNestedOptions(prev => ({
-          ...prev,
-          [option.optionsType!]: null
-        }));
+        clearNestedOptions(option.optionsType);
       }
       
       setSelectedOptions(prev => prev.filter(id => id !== optionId));
@@ -189,66 +196,82 @@ const Booking: React.FC = () => {
 
   // Create summary of selected options for display in PriceCalculator
   const getOptionsSummary = () => {
-    const summary = selectedOptions.map(optionId => {
+    const summary: any[] = [];
+    
+    // Regular options
+    selectedOptions.forEach(optionId => {
       const option = addOnOptions.find((opt) => opt.id === optionId);
-      if (!option) return null;
+      if (!option) return;
       
-      const quantity = optionQuantities[optionId] || 1;
-      if (quantity <= 0) return null;
-      
-      let nestedOptionTitle = null;
-      let totalPrice = option.price * quantity;
-      
-      // Add nested option details
-      if (option.id === 7 && selectedNestedOptions.album) { // Album
-        const albumOption = albumSizeOptions.find(opt => opt.id === selectedNestedOptions.album);
-        if (albumOption) {
-          nestedOptionTitle = albumOption.title;
-          totalPrice += albumOption.price * quantity;
-        }
-      } else if (option.id === 8 && selectedNestedOptions.frame) { // Frame
-        const frameOption = frameSizeOptions.find(opt => opt.id === selectedNestedOptions.frame);
-        if (frameOption) {
-          nestedOptionTitle = frameOption.title;
-          totalPrice += frameOption.price * quantity;
+      if (!option.hasNestedOptions) {
+        const quantity = optionQuantities[optionId] || 1;
+        if (quantity <= 0) return;
+        
+        summary.push({
+          title: option.title,
+          quantity: quantity,
+          price: option.price * quantity
+        });
+      } else {
+        // For options with nested choices (like albums and frames)
+        if (option.optionsType) {
+          const nestedSelections = selectedNestedOptions[option.optionsType];
+          
+          // Process each nested option (e.g., each album size) separately
+          Object.entries(nestedSelections).forEach(([nestedId, quantity]) => {
+            if (quantity <= 0) return;
+            
+            const nestedOptionsList = option.optionsType === 'album' ? albumSizeOptions : frameSizeOptions;
+            const nestedOption = nestedOptionsList.find(opt => opt.id === nestedId);
+            
+            if (nestedOption) {
+              const totalNestedPrice = (option.price + nestedOption.price) * quantity;
+              summary.push({
+                title: `${option.title} - ${nestedOption.title}`,
+                quantity: quantity,
+                price: totalNestedPrice
+              });
+            }
+          });
         }
       }
-      
-      return {
-        title: option.title,
-        quantity: quantity,
-        nestedOption: nestedOptionTitle,
-        price: totalPrice
-      };
-    }).filter(Boolean);
+    });
     
     return summary;
   };
 
   const getOptionsTotal = () => {
-    let optionsTotal = selectedOptions.reduce((total, optionId) => {
+    let optionsTotal = 0;
+    
+    // Calculate for regular options
+    selectedOptions.forEach(optionId => {
       const option = addOnOptions.find((opt) => opt.id === optionId);
-      const quantity = optionQuantities[optionId] || 1;
-      return total + (option?.price || 0) * quantity;
-    }, 0);
-
-    // Add nested option prices
-    if (selectedOptions.includes(7) && selectedNestedOptions.album) {
-      const albumOption = albumSizeOptions.find(opt => opt.id === selectedNestedOptions.album);
-      if (albumOption) {
-        const quantity = optionQuantities[7] || 1;
-        optionsTotal += albumOption.price * quantity;
+      if (!option) return;
+      
+      if (!option.hasNestedOptions) {
+        const quantity = optionQuantities[optionId] || 1;
+        if (quantity <= 0) return;
+        optionsTotal += option.price * quantity;
+      } else {
+        // For options with nested choices (albums and frames)
+        if (option.optionsType) {
+          const nestedSelections = selectedNestedOptions[option.optionsType];
+          
+          // Add up all selected nested options
+          Object.entries(nestedSelections).forEach(([nestedId, quantity]) => {
+            if (quantity <= 0) return;
+            
+            const nestedOptionsList = option.optionsType === 'album' ? albumSizeOptions : frameSizeOptions;
+            const nestedOption = nestedOptionsList.find(opt => opt.id === nestedId);
+            
+            if (nestedOption) {
+              optionsTotal += (option.price + nestedOption.price) * quantity;
+            }
+          });
+        }
       }
-    }
-
-    if (selectedOptions.includes(8) && selectedNestedOptions.frame) {
-      const frameOption = frameSizeOptions.find(opt => opt.id === selectedNestedOptions.frame);
-      if (frameOption) {
-        const quantity = optionQuantities[8] || 1;
-        optionsTotal += frameOption.price * quantity;
-      }
-    }
-
+    });
+    
     return optionsTotal;
   };
 
@@ -359,15 +382,15 @@ const Booking: React.FC = () => {
                 {addOnOptions.map((option) => {
                   const hasNestedOptions = option.hasNestedOptions && option.optionsType;
                   let nestedOptions = null;
-                  let selectedNestedOption = null;
+                  let activeNestedOptions = null;
                   
                   if (hasNestedOptions) {
                     if (option.optionsType === 'frame') {
                       nestedOptions = frameSizeOptions;
-                      selectedNestedOption = selectedNestedOptions.frame;
+                      activeNestedOptions = selectedNestedOptions.frame;
                     } else if (option.optionsType === 'album') {
                       nestedOptions = albumSizeOptions;
-                      selectedNestedOption = selectedNestedOptions.album;
+                      activeNestedOptions = selectedNestedOptions.album;
                     }
                   }
                   
@@ -381,13 +404,16 @@ const Booking: React.FC = () => {
                       isSelected={selectedOptions.includes(option.id)}
                       onClick={() => handleOptionToggle(option.id)}
                       nestedOptions={hasNestedOptions ? nestedOptions : undefined}
-                      selectedNestedOption={hasNestedOptions ? selectedNestedOption : undefined}
+                      selectedNestedOptions={hasNestedOptions ? activeNestedOptions : undefined}
                       onNestedOptionSelect={hasNestedOptions && option.optionsType 
-                        ? (optionId) => handleNestedOptionSelect(option.optionsType!, optionId) 
+                        ? (optionId, quantity) => handleNestedOptionSelect(option.optionsType!, optionId, quantity) 
                         : undefined}
-                      hasQuantity={option.hasQuantity}
+                      onNestedOptionClear={hasNestedOptions && option.optionsType
+                        ? () => clearNestedOptions(option.optionsType!)
+                        : undefined}
+                      hasQuantity={option.hasQuantity && !option.hasNestedOptions}
                       quantity={quantity}
-                      onQuantityChange={option.hasQuantity 
+                      onQuantityChange={option.hasQuantity && !option.hasNestedOptions
                         ? (newQuantity) => handleQuantityChange(option.id, newQuantity) 
                         : undefined}
                     />
@@ -523,7 +549,7 @@ const Booking: React.FC = () => {
                     <span className="col-span-2">{isWeekend ? '주말' : '평일'}</span>
                   </div>
                   
-                  {selectedOptions.length > 0 && (
+                  {getOptionsSummary().length > 0 && (
                     <div className="grid grid-cols-3 gap-2">
                       <span className="text-merrymoment-brown">추가 옵션:</span>
                       <div className="col-span-2">
@@ -532,7 +558,6 @@ const Booking: React.FC = () => {
                             <li key={index}>
                               {option.title}
                               {option.quantity && option.quantity > 1 ? ` (${option.quantity}개)` : ''}
-                              {option.nestedOption ? ` - ${option.nestedOption}` : ''}
                             </li>
                           ))}
                         </ul>
