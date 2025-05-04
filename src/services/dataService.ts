@@ -42,8 +42,8 @@ const defaultPackages: Record<string, PackageData> = {
     ],
   },
   momentPremium: {
-    id: "momentPremium",
-    title: "모먼트 프리미엄",
+    id: "merryPremium",
+    title: "메리 프리미엄",
     englishTitle: "merry.Premium",
     weekdayPrice: 790000,
     weekendPrice: 850000,
