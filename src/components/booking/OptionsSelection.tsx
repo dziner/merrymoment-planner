@@ -42,6 +42,8 @@ const OptionsSelection: React.FC<OptionsSelectionProps> = ({
   albumSizeOptions,
   frameSizeOptions
 }) => {
+  console.log("Render OptionsSelection with: ", { addOnOptions, selectedNestedOptions });
+  
   return (
     <div className="animate-fade-in">
       <div className="mb-6 text-center">
@@ -67,18 +69,22 @@ const OptionsSelection: React.FC<OptionsSelectionProps> = ({
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {addOnOptions.map((option) => {
-          // Fix: Check optionsType instead of optionType
-          const hasNestedOptions = option.hasNestedOptions && option.optionsType;
+          // Check both optionsType and optionType properties
+          const hasNestedOptions = option.hasNestedOptions;
           let nestedOptions = null;
           let activeNestedOptions = null;
           
-          if (hasNestedOptions) {
+          if (hasNestedOptions && option.optionsType) {
+            console.log(`Processing nested options for ${option.title}, type: ${option.optionsType}`);
+            
             if (option.optionsType === 'frame') {
               nestedOptions = frameSizeOptions;
               activeNestedOptions = selectedNestedOptions.frame;
+              console.log("Frame options:", { nestedOptions, activeNestedOptions });
             } else if (option.optionsType === 'album') {
               nestedOptions = albumSizeOptions;
               activeNestedOptions = selectedNestedOptions.album;
+              console.log("Album options:", { nestedOptions, activeNestedOptions });
             }
           }
           
@@ -91,7 +97,7 @@ const OptionsSelection: React.FC<OptionsSelectionProps> = ({
               price={option.price}
               isSelected={selectedOptions.includes(option.id)}
               onClick={() => onOptionToggle(option.id)}
-              nestedOptions={hasNestedOptions ? nestedOptions : undefined}
+              nestedOptions={hasNestedOptions && nestedOptions ? nestedOptions : undefined}
               selectedNestedOptions={hasNestedOptions ? activeNestedOptions : undefined}
               onNestedOptionSelect={hasNestedOptions && option.optionsType 
                 ? (optionId, quantity) => onNestedOptionSelect(option.optionsType!, optionId, quantity) 

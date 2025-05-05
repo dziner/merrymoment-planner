@@ -186,12 +186,18 @@ const transformOptionData = (rawData: any[]): OptionData[] => {
     const hasQuantity = item.hasQuantity === 'TRUE' || item.hasQuantity === 'true' || item.hasQuantity === true;
     const hasNestedOptions = item.hasNestedOptions === 'TRUE' || item.hasNestedOptions === 'true' || item.hasNestedOptions === true;
     
-    // Fix: use optionsType instead of optionType
+    // IMPORTANT: Use both optionsType AND optionType fields from the data
+    // This handles the case where the field name might be different in the spreadsheet
     let optionsType: 'album' | 'frame' | undefined;
     if (item.optionsType === 'album' || item.optionsType === 'frame') {
       optionsType = item.optionsType as 'album' | 'frame';
+    } else if (item.optionType === 'album' || item.optionType === 'frame') {
+      // Also check the optionType field (without s) in case that's what's in the spreadsheet
+      optionsType = item.optionType as 'album' | 'frame';
     }
     
+    console.log(`Option ${item.id} - ${item.title}: hasNestedOptions=${hasNestedOptions}, optionsType=${optionsType}`);
+
     return {
       id: Number(item.id) || 0,
       title: item.title || '',

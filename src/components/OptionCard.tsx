@@ -115,7 +115,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
         )}
       </div>
 
-      {/* Nested options dropdown - Fixed to always show when selected */}
+      {/* Nested options dropdown - Always show when parent option is selected */}
       {isSelected && nestedOptions && nestedOptions.length > 0 && (
         <div className="mt-2 pl-2 border-l-2 border-merrymoment-beige">
           {nestedOptions.map(option => {

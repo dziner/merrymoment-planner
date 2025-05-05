@@ -37,6 +37,7 @@ export function useBookingState() {
   };
 
   const clearNestedOptions = (optionType: string) => {
+    console.log(`Clearing nested options for: ${optionType}`);
     setSelectedNestedOptions(prev => ({
       ...prev,
       [optionType]: {}
