@@ -12,7 +12,7 @@ interface NestedOption {
 
 interface OptionCardProps {
   title: string;
-  price: number;
+  price: number | string;
   isSelected: boolean;
   onClick: () => void;
   nestedOptions?: NestedOption[];
@@ -22,6 +22,7 @@ interface OptionCardProps {
   hasQuantity?: boolean;
   quantity?: number;
   onQuantityChange?: (quantity: number) => void;
+  showQuantitySelector?: boolean;
 }
 
 const OptionCard: React.FC<OptionCardProps> = ({
@@ -35,7 +36,8 @@ const OptionCard: React.FC<OptionCardProps> = ({
   onNestedOptionClear,
   hasQuantity = false,
   quantity = 1,
-  onQuantityChange
+  onQuantityChange,
+  showQuantitySelector = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -87,6 +89,14 @@ const OptionCard: React.FC<OptionCardProps> = ({
     }
   };
 
+  // Function to format price display
+  const formatPrice = (price: number | string) => {
+    if (typeof price === 'number') {
+      return `${price.toLocaleString()}원`;
+    }
+    return price;
+  };
+
   return (
     <div className="flex flex-col">
       <div 
@@ -101,11 +111,11 @@ const OptionCard: React.FC<OptionCardProps> = ({
         
         <h4 className="text-base font-medium mb-1 font-pretendard">{title}</h4>
         <div className="text-sm text-merrymoment-brown font-pretendard">
-          {price.toLocaleString()}원
+          {formatPrice(price)}
         </div>
         
-        {/* Show quantity selector for options with hasQuantity when selected */}
-        {isSelected && hasQuantity && onQuantityChange && (
+        {/* Only show quantity selector for regular options that have hasQuantity when selected */}
+        {isSelected && showQuantitySelector && hasQuantity && onQuantityChange && (
           <QuantitySelector
             quantity={quantity}
             onIncrease={handleIncrease}
@@ -141,19 +151,24 @@ const OptionCard: React.FC<OptionCardProps> = ({
                 
                 {isNestedSelected && (
                   <div className="mt-1 px-3" onClick={(e) => e.stopPropagation()}>
-                    <QuantitySelector
-                      label="수량"
-                      quantity={nestedQuantity}
-                      onIncrease={(e) => { 
-                        e?.stopPropagation();
-                        handleNestedQuantityChange(option.id, nestedQuantity + 1);
-                      }}
-                      onDecrease={(e) => {
-                        e?.stopPropagation();
-                        handleNestedQuantityChange(option.id, nestedQuantity - 1);
-                      }}
-                      minQuantity={0}
-                    />
+                    <div className="flex flex-col">
+                      <QuantitySelector
+                        label="수량"
+                        quantity={nestedQuantity}
+                        onIncrease={(e) => { 
+                          e?.stopPropagation();
+                          handleNestedQuantityChange(option.id, nestedQuantity + 1);
+                        }}
+                        onDecrease={(e) => {
+                          e?.stopPropagation();
+                          handleNestedQuantityChange(option.id, nestedQuantity - 1);
+                        }}
+                        minQuantity={0}
+                      />
+                      <p className="text-xs text-merrymoment-brown font-pretendard text-right mt-1">
+                        권당 {option.price.toLocaleString()}원
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>

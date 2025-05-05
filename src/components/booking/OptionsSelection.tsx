@@ -44,6 +44,26 @@ const OptionsSelection: React.FC<OptionsSelectionProps> = ({
 }) => {
   console.log("Render OptionsSelection with: ", { addOnOptions, selectedNestedOptions });
   
+  // Helper function to calculate price range for options with nested choices
+  const getPriceRange = (optionType: string, basePrice: number): string => {
+    const sizeOptions = optionType === 'album' ? albumSizeOptions : frameSizeOptions;
+    
+    if (sizeOptions && sizeOptions.length > 0) {
+      // Find min and max prices
+      let prices = sizeOptions.map(option => basePrice + option.price);
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      
+      // Format the price range
+      if (minPrice === maxPrice) {
+        return `${minPrice.toLocaleString()}원`;
+      }
+      return `${minPrice.toLocaleString()}~${maxPrice.toLocaleString()}원`;
+    }
+    
+    return `${basePrice.toLocaleString()}원`;
+  };
+  
   return (
     <div className="animate-fade-in">
       <div className="mb-6 text-center">
@@ -73,9 +93,13 @@ const OptionsSelection: React.FC<OptionsSelectionProps> = ({
           const hasNestedOptions = option.hasNestedOptions;
           let nestedOptions = null;
           let activeNestedOptions = null;
+          let priceDisplay = option.price;
           
           if (hasNestedOptions && option.optionsType) {
             console.log(`Processing nested options for ${option.title}, type: ${option.optionsType}`);
+            
+            // For options with nested choices, calculate price range
+            priceDisplay = getPriceRange(option.optionsType, option.price);
             
             if (option.optionsType === 'frame') {
               nestedOptions = frameSizeOptions;
@@ -89,12 +113,14 @@ const OptionsSelection: React.FC<OptionsSelectionProps> = ({
           }
           
           const quantity = optionQuantities[option.id] || 1;
+          // Only show quantity selector for options without nested options
+          const showQuantitySelector = !hasNestedOptions;
           
           return (
             <OptionCard
               key={option.id}
               title={option.title}
-              price={option.price}
+              price={priceDisplay}
               isSelected={selectedOptions.includes(option.id)}
               onClick={() => onOptionToggle(option.id)}
               nestedOptions={hasNestedOptions && nestedOptions ? nestedOptions : undefined}
@@ -110,6 +136,7 @@ const OptionsSelection: React.FC<OptionsSelectionProps> = ({
               onQuantityChange={option.hasQuantity
                 ? (newQuantity) => onQuantityChange(option.id, newQuantity) 
                 : undefined}
+              showQuantitySelector={showQuantitySelector}
             />
           );
         })}
