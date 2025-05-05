@@ -35,11 +35,11 @@ const ContactForm: React.FC<ContactFormProps> = ({
           정보 입력
         </h2>
         <p className="text-merrymoment-brown font-pretendard">
-          예약을 위한 연락처 정보를 입력해주세요.
+          예약자 정보를 입력해주세요.
         </p>
       </div>
       
-      {/* Show selected package info on this step too */}
+      {/* Selected Package Info Display */}
       {selectedPackage && packageData[selectedPackage] && (
         <SelectedPackageInfo
           packageTitle={packageData[selectedPackage].title}
@@ -54,13 +54,19 @@ const ContactForm: React.FC<ContactFormProps> = ({
         <PriceCalculator 
           basePrice={getBasePrice()} 
           optionsTotal={getOptionsTotal()}
-          selectedOptions={getOptionsSummary()} 
+          selectedOptions={getOptionsSummary()}
         />
       </div>
+
+      <div className="mb-6 text-center">
+        <p className="text-sm text-merrymoment-brown font-pretendard italic">
+          선택하신 상품과 옵션은 상담과정을 통해 고객분들의 필요와 선호에 따라 정확히 다시 안내드립니다.
+        </p>
+      </div>
       
-      <div className="space-y-4 mb-8">
+      <div className="space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium mb-1 text-merrymoment-darkbrown font-pretendard">
+          <label htmlFor="name" className="block mb-1 text-merrymoment-brown font-pretendard">
             이름 <span className="text-red-500">*</span>
           </label>
           <input
@@ -69,14 +75,13 @@ const ContactForm: React.FC<ContactFormProps> = ({
             name="name"
             value={contactInfo.name}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-merrymoment-beige rounded-md focus:outline-none focus:border-merrymoment-brown font-pretendard"
-            placeholder="이름을 입력하세요"
+            className="w-full border border-merrymoment-beige rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-merrymoment-beige"
             required
           />
         </div>
         
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium mb-1 text-merrymoment-darkbrown font-pretendard">
+          <label htmlFor="phone" className="block mb-1 text-merrymoment-brown font-pretendard">
             연락처 <span className="text-red-500">*</span>
           </label>
           <input
@@ -85,15 +90,15 @@ const ContactForm: React.FC<ContactFormProps> = ({
             name="phone"
             value={contactInfo.phone}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-merrymoment-beige rounded-md focus:outline-none focus:border-merrymoment-brown font-pretendard"
+            className="w-full border border-merrymoment-beige rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-merrymoment-beige"
             placeholder="010-0000-0000"
             required
           />
         </div>
         
         <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1 text-merrymoment-darkbrown font-pretendard">
-            이메일 (선택)
+          <label htmlFor="email" className="block mb-1 text-merrymoment-brown font-pretendard">
+            이메일
           </label>
           <input
             type="email"
@@ -101,8 +106,8 @@ const ContactForm: React.FC<ContactFormProps> = ({
             name="email"
             value={contactInfo.email}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-merrymoment-beige rounded-md focus:outline-none focus:border-merrymoment-brown font-pretendard"
-            placeholder="example@email.com"
+            className="w-full border border-merrymoment-beige rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-merrymoment-beige"
+            placeholder="선택 사항입니다"
           />
         </div>
       </div>

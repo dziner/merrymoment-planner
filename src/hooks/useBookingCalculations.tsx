@@ -51,7 +51,8 @@ export function useBookingCalculations(
             const nestedOption = nestedOptionsList.find(opt => opt.id === nestedId);
             
             if (nestedOption) {
-              const totalNestedPrice = (option.price + nestedOption.price) * quantity;
+              // Use only the nested option price multiplied by quantity
+              const totalNestedPrice = nestedOption.price * quantity;
               summary.push({
                 title: `${option.title} - ${nestedOption.title}`,
                 quantity: quantity,
@@ -91,7 +92,8 @@ export function useBookingCalculations(
             const nestedOption = nestedOptionsList.find(opt => opt.id === nestedId);
             
             if (nestedOption) {
-              optionsTotal += (option.price + nestedOption.price) * quantity;
+              // Use only the nested option price multiplied by quantity
+              optionsTotal += nestedOption.price * quantity;
             }
           });
         }
