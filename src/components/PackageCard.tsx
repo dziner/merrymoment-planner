@@ -45,7 +45,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
       
       {englishTitle ? (
         <>
-          <h3 className="text-xl font-medium font-rozha mb-1">{englishTitle}</h3>
+          <h3 className="text-2xl font-medium font-rozha mb-1">{englishTitle}</h3>
           <p className="text-sm font-pretendard mb-2 text-merrymoment-brown">{title}</p>
         </>
       ) : (
@@ -57,7 +57,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
           {currentPrice.toLocaleString()}원
         </span>
         <span className="text-sm ml-1 text-merrymoment-brown font-pretendard">
-          {isWeekend ? '(주말)' : '(평일)'}
+          {isWeekend ? '(주말・공휴일)' : '(평일)'}
         </span>
       </div>
       

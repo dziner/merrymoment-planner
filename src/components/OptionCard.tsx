@@ -111,6 +111,16 @@ const OptionCard: React.FC<OptionCardProps> = ({
             minQuantity={0}
           />
         )}
+        
+        {/* Add quantity selector for options with nested options */}
+        {isSelected && hasQuantity && onQuantityChange && nestedOptions && !isExpanded && (
+          <QuantitySelector
+            quantity={quantity}
+            onIncrease={handleIncrease}
+            onDecrease={handleDecrease}
+            minQuantity={0}
+          />
+        )}
       </div>
 
       {/* Nested options dropdown */}

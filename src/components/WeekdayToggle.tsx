@@ -30,7 +30,7 @@ const WeekdayToggle: React.FC<WeekdayToggleProps> = ({ isWeekend, onChange }) =>
             : "bg-merrymoment-cream text-merrymoment-brown"
         )}
       >
-        주말
+        주말・공휴일
       </button>
     </div>
   );

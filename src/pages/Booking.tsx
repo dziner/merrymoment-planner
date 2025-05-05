@@ -151,7 +151,7 @@ const Booking: React.FC = () => {
               <Button 
                 variant="outline" 
                 onClick={handlePrevStep}
-                className="border-merrymoment-beige text-merrymoment-brown hover:bg-merrymoment-beige font-pretendard"
+                className="border-merrymoment-beige text-merrymoment-brown hover:bg-merrymoment-beige font-pretendard px-8 py-6 h-auto text-lg"
               >
                 이전
               </Button>
@@ -160,7 +160,7 @@ const Booking: React.FC = () => {
             {currentStep < 3 && (
               <Button 
                 onClick={handleNextStep}
-                className={`ml-auto bg-merrymoment-brown hover:bg-merrymoment-darkbrown text-white font-pretendard ${
+                className={`ml-auto bg-merrymoment-brown hover:bg-merrymoment-darkbrown text-white font-pretendard px-8 py-6 h-auto text-lg ${
                   currentStep === 0 && !selectedPackage ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
