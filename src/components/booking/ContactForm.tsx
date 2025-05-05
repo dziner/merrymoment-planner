@@ -50,6 +50,14 @@ const ContactForm: React.FC<ContactFormProps> = ({
         />
       )}
       
+      <div className="mb-6">
+        <PriceCalculator 
+          basePrice={getBasePrice()} 
+          optionsTotal={getOptionsTotal()}
+          selectedOptions={getOptionsSummary()} 
+        />
+      </div>
+      
       <div className="space-y-4 mb-8">
         <div>
           <label htmlFor="name" className="block text-sm font-medium mb-1 text-merrymoment-darkbrown font-pretendard">
@@ -97,14 +105,6 @@ const ContactForm: React.FC<ContactFormProps> = ({
             placeholder="example@email.com"
           />
         </div>
-      </div>
-      
-      <div className="mb-6">
-        <PriceCalculator 
-          basePrice={getBasePrice()} 
-          optionsTotal={getOptionsTotal()}
-          selectedOptions={getOptionsSummary()} 
-        />
       </div>
     </div>
   );
