@@ -45,12 +45,12 @@ const OptionsSelection: React.FC<OptionsSelectionProps> = ({
   console.log("Render OptionsSelection with: ", { addOnOptions, selectedNestedOptions });
   
   // Helper function to calculate price range for options with nested choices
-  const getPriceRange = (optionType: string, basePrice: number): string => {
+  const getPriceRange = (optionType: string): string => {
     const sizeOptions = optionType === 'album' ? albumSizeOptions : frameSizeOptions;
     
     if (sizeOptions && sizeOptions.length > 0) {
-      // Find min and max prices
-      let prices = sizeOptions.map(option => basePrice + option.price);
+      // Get all prices
+      const prices = sizeOptions.map(option => option.price);
       const minPrice = Math.min(...prices);
       const maxPrice = Math.max(...prices);
       
@@ -61,7 +61,7 @@ const OptionsSelection: React.FC<OptionsSelectionProps> = ({
       return `${minPrice.toLocaleString()}~${maxPrice.toLocaleString()}원`;
     }
     
-    return `${basePrice.toLocaleString()}원`;
+    return '';
   };
   
   return (
@@ -99,7 +99,7 @@ const OptionsSelection: React.FC<OptionsSelectionProps> = ({
             console.log(`Processing nested options for ${option.title}, type: ${option.optionsType}`);
             
             // For options with nested choices, calculate price range
-            priceDisplay = getPriceRange(option.optionsType, option.price);
+            priceDisplay = getPriceRange(option.optionsType);
             
             if (option.optionsType === 'frame') {
               nestedOptions = frameSizeOptions;
