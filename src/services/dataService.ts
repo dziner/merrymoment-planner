@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Types for our dynamic data
@@ -181,14 +180,20 @@ const transformPackageData = (rawData: any[]): Record<string, PackageData> => {
 };
 
 const transformOptionData = (rawData: any[]): OptionData[] => {
-  return rawData.map(item => ({
-    id: Number(item.id) || 0,
-    title: item.title || '',
-    price: Number(String(item.price).replace(/,/g, '')) || 0,
-    hasQuantity: item.hasQuantity === 'true' || item.hasQuantity === true,
-    hasNestedOptions: item.hasNestedOptions === 'true' || item.hasNestedOptions === true,
-    optionsType: (item.optionsType === 'album' || item.optionsType === 'frame') ? item.optionsType : undefined,
-  }));
+  return rawData.map(item => {
+    // Handle the uppercase "TRUE"/"FALSE" conversion to boolean
+    const hasQuantity = item.hasQuantity === 'TRUE' || item.hasQuantity === 'true' || item.hasQuantity === true;
+    const hasNestedOptions = item.hasNestedOptions === 'TRUE' || item.hasNestedOptions === 'true' || item.hasNestedOptions === true;
+    
+    return {
+      id: Number(item.id) || 0,
+      title: item.title || '',
+      price: Number(String(item.price).replace(/,/g, '')) || 0,
+      hasQuantity: hasQuantity,
+      hasNestedOptions: hasNestedOptions,
+      optionsType: (item.optionsType === 'album' || item.optionsType === 'frame') ? item.optionsType : undefined,
+    };
+  });
 };
 
 const transformSizeOptions = (rawData: any[]): SizeOption[] => {

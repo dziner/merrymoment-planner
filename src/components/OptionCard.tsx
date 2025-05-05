@@ -1,4 +1,3 @@
-
 import React, { useState, MouseEvent } from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -104,18 +103,8 @@ const OptionCard: React.FC<OptionCardProps> = ({
           {price.toLocaleString()}원
         </div>
         
-        {/* Show quantity selector for options without nested options */}
-        {isSelected && hasQuantity && onQuantityChange && !nestedOptions && (
-          <QuantitySelector
-            quantity={quantity}
-            onIncrease={handleIncrease}
-            onDecrease={handleDecrease}
-            minQuantity={0}
-          />
-        )}
-        
-        {/* Show quantity selector for parent options with nested options */}
-        {isSelected && hasQuantity && onQuantityChange && nestedOptions && (
+        {/* Show quantity selector for all options with hasQuantity when selected */}
+        {isSelected && hasQuantity && onQuantityChange && (
           <QuantitySelector
             quantity={quantity}
             onIncrease={handleIncrease}
