@@ -62,7 +62,7 @@ export function useBookingState() {
       } else {
         // When selecting option, set default quantity to 1
         const option = addOnOptions.find(opt => opt.id === optionId);
-        if (option?.hasQuantity && !option?.hasNestedOptions) {
+        if (option?.hasQuantity) {
           setOptionQuantities(prev => ({
             ...prev,
             [optionId]: 1

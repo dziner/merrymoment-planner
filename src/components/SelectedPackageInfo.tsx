@@ -24,7 +24,7 @@ const SelectedPackageInfo: React.FC<SelectedPackageInfoProps> = ({
         <div className="mb-4">
           {englishTitle ? (
             <>
-              <h3 className="text-2xl font-medium font-rozha mb-1">{englishTitle}</h3>
+              <h3 className="text-3xl font-medium font-rozha mb-1">{englishTitle}</h3>
               <p className="text-sm font-pretendard text-merrymoment-brown">{packageTitle}</p>
             </>
           ) : (

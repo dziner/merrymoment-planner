@@ -98,9 +98,9 @@ const OptionsSelection: React.FC<OptionsSelectionProps> = ({
               onNestedOptionClear={hasNestedOptions && option.optionsType
                 ? () => onNestedOptionClear(option.optionsType!)
                 : undefined}
-              hasQuantity={option.hasQuantity && !option.hasNestedOptions}
+              hasQuantity={option.hasQuantity}
               quantity={quantity}
-              onQuantityChange={option.hasQuantity && !option.hasNestedOptions
+              onQuantityChange={option.hasQuantity
                 ? (newQuantity) => onQuantityChange(option.id, newQuantity) 
                 : undefined}
             />
