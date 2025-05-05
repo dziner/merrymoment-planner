@@ -4,12 +4,10 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import StepIndicator from '@/components/StepIndicator';
 import { Button } from '@/components/ui/button';
-import { usePackages, useOptions, useAlbumSizes, useFrameSizes, useDataRefresh } from '@/services/dataService';
+import { usePackages, useOptions, useAlbumSizes, useFrameSizes } from '@/services/dataService';
 import { useBookingState } from '@/hooks/useBookingState';
 import { useBookingCalculations } from '@/hooks/useBookingCalculations';
 import { useBookingNavigation } from '@/hooks/useBookingNavigation';
-import { RefreshCw } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
 // Step components
 import PackageSelection from '@/components/booking/PackageSelection';
@@ -44,8 +42,6 @@ const Booking: React.FC = () => {
   const { data: addOnOptions } = useOptions();
   const { data: albumSizeOptions } = useAlbumSizes();
   const { data: frameSizeOptions } = useFrameSizes();
-  const { refreshAllData } = useDataRefresh();
-  const { toast } = useToast();
   
   // Get price calculations
   const { getBasePrice, getOptionsTotal, getOptionsSummary } = useBookingCalculations(
@@ -78,31 +74,14 @@ const Booking: React.FC = () => {
     document.title = `MerryMoment - ${steps[currentStep]}`;
   }, [currentStep]);
 
-  const handleRefreshData = () => {
-    refreshAllData();
-    toast({
-      title: "데이터가 새로고침되었습니다",
-      description: "최신 정보가 반영되었습니다.",
-    });
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       
       <main className="flex-grow py-6 px-4">
         <div className="max-w-3xl mx-auto">
-          <div className="flex justify-between items-center mb-4">
+          <div className="mb-4">
             <StepIndicator currentStep={currentStep} steps={steps} />
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={handleRefreshData}
-              className="flex items-center gap-1"
-            >
-              <RefreshCw className="h-4 w-4" />
-              <span>새로고침</span>
-            </Button>
           </div>
           
           {/* Step 1: Package Selection */}
@@ -130,9 +109,9 @@ const Booking: React.FC = () => {
               onNestedOptionClear={clearNestedOptions}
               optionQuantities={optionQuantities}
               onQuantityChange={(optionId, quantity) => handleQuantityChange(optionId, quantity, addOnOptions)}
-              getBasePrice={() => getBasePrice}
-              getOptionsTotal={() => getOptionsTotal}
-              getOptionsSummary={() => getOptionsSummary}
+              getBasePrice={getBasePriceFunc}
+              getOptionsTotal={getOptionsTotalFunc}
+              getOptionsSummary={getOptionsSummaryFunc}
               albumSizeOptions={albumSizeOptions}
               frameSizeOptions={frameSizeOptions}
             />
@@ -146,9 +125,9 @@ const Booking: React.FC = () => {
               isWeekend={isWeekend}
               contactInfo={contactInfo}
               handleInputChange={handleInputChange}
-              getBasePrice={() => getBasePrice}
-              getOptionsTotal={() => getOptionsTotal}
-              getOptionsSummary={() => getOptionsSummary}
+              getBasePrice={getBasePriceFunc}
+              getOptionsTotal={getOptionsTotalFunc}
+              getOptionsSummary={getOptionsSummaryFunc}
             />
           )}
           
@@ -159,9 +138,9 @@ const Booking: React.FC = () => {
               selectedPackage={selectedPackage}
               packageData={packageData}
               isWeekend={isWeekend}
-              getBasePrice={() => getBasePrice}
-              getOptionsTotal={() => getOptionsTotal}
-              getOptionsSummary={() => getOptionsSummary}
+              getBasePrice={getBasePriceFunc}
+              getOptionsTotal={getOptionsTotalFunc}
+              getOptionsSummary={getOptionsSummaryFunc}
               handleExternalBooking={handleExternalBooking}
             />
           )}

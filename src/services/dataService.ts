@@ -86,7 +86,13 @@ const defaultFrameOptions: SizeOption[] = [
 const fetchFromGoogleSheets = async (sheetId: string, sheetName: string) => {
   try {
     const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
-    const response = await fetch(url);
+    const response = await fetch(url, { 
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache'
+      }
+    });
+    
     if (!response.ok) {
       throw new Error('Failed to fetch data from Google Sheets');
     }
@@ -98,22 +104,50 @@ const fetchFromGoogleSheets = async (sheetId: string, sheetName: string) => {
   }
 };
 
-// Simple CSV parser (for real implementation you might want to use a library)
+// Improved CSV parser
 const parseCSV = (csv: string) => {
   const lines = csv.split('\n');
+  if (lines.length <= 1) {
+    console.error('CSV data is empty or invalid');
+    return [];
+  }
+
+  // Clean quotes from headers and get them
   const headers = lines[0].split(',').map(header => header.replace(/"/g, '').trim());
   
   return lines.slice(1).map(line => {
-    const values = line.split(',').map(value => value.replace(/"/g, '').trim());
-    const obj: Record<string, any> = {};
+    // Handle commas within quoted values properly
+    const values: string[] = [];
+    let inQuotes = false;
+    let currentValue = '';
     
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        values.push(currentValue.replace(/"/g, '').trim());
+        currentValue = '';
+      } else {
+        currentValue += char;
+      }
+    }
+    
+    // Add the last value
+    values.push(currentValue.replace(/"/g, '').trim());
+    
+    const obj: Record<string, any> = {};
     headers.forEach((header, index) => {
-      // Keep all values as strings initially
-      obj[header] = values[index] || '';
+      if (index < values.length) {
+        obj[header] = values[index];
+      } else {
+        obj[header] = '';
+      }
     });
     
     return obj;
-  });
+  }).filter(item => Object.values(item).some(val => val !== ''));  // Filter out empty rows
 };
 
 // Function to transform raw data from sheets to our app's format
@@ -123,20 +157,22 @@ const transformPackageData = (rawData: any[]): Record<string, PackageData> => {
   rawData.forEach(item => {
     if (!item.id) return;
     
-    // Parse features from comma-separated string if needed
-    let features = item.features;
-    if (typeof features === 'string') {
-      features = features.split(',').map(text => ({ text: text.trim() }));
-    } else {
-      features = [];
+    // Parse features from comma-separated string
+    let features: { text: string }[] = [];
+    if (typeof item.features === 'string' && item.features.trim() !== '') {
+      features = item.features.split(',').map((text: string) => ({ text: text.trim() }));
     }
+    
+    // Clean price values (remove commas, convert to number)
+    const weekdayPrice = Number(String(item.weekdayPrice).replace(/,/g, '')) || 0;
+    const weekendPrice = Number(String(item.weekendPrice).replace(/,/g, '')) || 0;
     
     packages[item.id] = {
       id: item.id,
       title: item.title || '',
       englishTitle: item.englishTitle || '',
-      weekdayPrice: Number(item.weekdayPrice) || 0,
-      weekendPrice: Number(item.weekendPrice) || 0,
+      weekdayPrice: weekdayPrice,
+      weekendPrice: weekendPrice,
       features: features,
     };
   });
@@ -148,7 +184,7 @@ const transformOptionData = (rawData: any[]): OptionData[] => {
   return rawData.map(item => ({
     id: Number(item.id) || 0,
     title: item.title || '',
-    price: Number(item.price) || 0,
+    price: Number(String(item.price).replace(/,/g, '')) || 0,
     hasQuantity: item.hasQuantity === 'true' || item.hasQuantity === true,
     hasNestedOptions: item.hasNestedOptions === 'true' || item.hasNestedOptions === true,
     optionsType: (item.optionsType === 'album' || item.optionsType === 'frame') ? item.optionsType : undefined,
@@ -159,12 +195,12 @@ const transformSizeOptions = (rawData: any[]): SizeOption[] => {
   return rawData.map(item => ({
     id: item.id || '',
     title: item.title || '',
-    price: Number(item.price) || 0
+    price: Number(String(item.price).replace(/,/g, '')) || 0
   }));
 };
 
-// Google Sheets IDs and sheet names - these would be configurable in a real app
-const SHEET_ID = '1GqfPV6RxQWyR-FHBd4ErTnhsHqujTAtDC9CE6wkRPOg'; // Example ID, replace with your actual sheet ID
+// Google Sheets IDs and sheet names
+const SHEET_ID = '1GqfPV6RxQWyR-FHBd4ErTnhsHqujTAtDC9CE6wkRPOg';
 const PACKAGES_SHEET_NAME = 'Packages';
 const OPTIONS_SHEET_NAME = 'Options';
 const ALBUM_SIZES_SHEET_NAME = 'AlbumSizes';
@@ -177,6 +213,7 @@ export function usePackages() {
     queryFn: async () => {
       try {
         const rawData = await fetchFromGoogleSheets(SHEET_ID, PACKAGES_SHEET_NAME);
+        console.log('Raw Package Data:', rawData);
         return transformPackageData(rawData);
       } catch (error) {
         console.error('Error fetching package data:', error);
@@ -184,7 +221,8 @@ export function usePackages() {
       }
     },
     initialData: defaultPackages,
-    staleTime: 60000, // Reduced to 1 minute
+    staleTime: 0, // Always fetch on mount
+    refetchOnMount: true,
   });
 }
 
@@ -194,6 +232,7 @@ export function useOptions() {
     queryFn: async () => {
       try {
         const rawData = await fetchFromGoogleSheets(SHEET_ID, OPTIONS_SHEET_NAME);
+        console.log('Raw Options Data:', rawData);
         return transformOptionData(rawData);
       } catch (error) {
         console.error('Error fetching option data:', error);
@@ -201,7 +240,8 @@ export function useOptions() {
       }
     },
     initialData: defaultOptions,
-    staleTime: 60000, // Reduced to 1 minute
+    staleTime: 0, // Always fetch on mount
+    refetchOnMount: true,
   });
 }
 
@@ -211,6 +251,7 @@ export function useAlbumSizes() {
     queryFn: async () => {
       try {
         const rawData = await fetchFromGoogleSheets(SHEET_ID, ALBUM_SIZES_SHEET_NAME);
+        console.log('Raw Album Sizes Data:', rawData);
         return transformSizeOptions(rawData);
       } catch (error) {
         console.error('Error fetching album sizes:', error);
@@ -218,7 +259,8 @@ export function useAlbumSizes() {
       }
     },
     initialData: defaultAlbumOptions,
-    staleTime: 60000, // Reduced to 1 minute
+    staleTime: 0, // Always fetch on mount
+    refetchOnMount: true,
   });
 }
 
@@ -228,27 +270,15 @@ export function useFrameSizes() {
     queryFn: async () => {
       try {
         const rawData = await fetchFromGoogleSheets(SHEET_ID, FRAME_SIZES_SHEET_NAME);
+        console.log('Raw Frame Sizes Data:', rawData);
         return transformSizeOptions(rawData);
       } catch (error) {
         console.error('Error fetching frame sizes:', error);
         return defaultFrameOptions;
       }
     },
-    initialData: defaultFrameOptions, 
-    staleTime: 60000, // Reduced to 1 minute
+    initialData: defaultFrameOptions,
+    staleTime: 0, // Always fetch on mount
+    refetchOnMount: true,
   });
-}
-
-// New function to refresh all data
-export function useDataRefresh() {
-  const queryClient = useQueryClient();
-  
-  const refreshAllData = () => {
-    queryClient.invalidateQueries({ queryKey: ['packages'] });
-    queryClient.invalidateQueries({ queryKey: ['options'] });
-    queryClient.invalidateQueries({ queryKey: ['albumSizes'] });
-    queryClient.invalidateQueries({ queryKey: ['frameSizes'] });
-  };
-  
-  return { refreshAllData };
 }
