@@ -93,7 +93,7 @@ const OptionsSelection: React.FC<OptionsSelectionProps> = ({
           const hasNestedOptions = option.hasNestedOptions;
           let nestedOptions = null;
           let activeNestedOptions = null;
-          let priceDisplay = option.price;
+          let priceDisplay: string | number = option.price;
           
           if (hasNestedOptions && option.optionsType) {
             console.log(`Processing nested options for ${option.title}, type: ${option.optionsType}`);
@@ -131,9 +131,9 @@ const OptionsSelection: React.FC<OptionsSelectionProps> = ({
               onNestedOptionClear={hasNestedOptions && option.optionsType
                 ? () => onNestedOptionClear(option.optionsType!)
                 : undefined}
-              hasQuantity={option.hasQuantity}
+              hasQuantity={option.hasQuantity && !hasNestedOptions}
               quantity={quantity}
-              onQuantityChange={option.hasQuantity
+              onQuantityChange={option.hasQuantity && !hasNestedOptions
                 ? (newQuantity) => onQuantityChange(option.id, newQuantity) 
                 : undefined}
               showQuantitySelector={showQuantitySelector}
