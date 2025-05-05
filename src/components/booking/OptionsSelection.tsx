@@ -67,6 +67,7 @@ const OptionsSelection: React.FC<OptionsSelectionProps> = ({
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {addOnOptions.map((option) => {
+          // Fix: Check optionsType instead of optionType
           const hasNestedOptions = option.hasNestedOptions && option.optionsType;
           let nestedOptions = null;
           let activeNestedOptions = null;

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 
 interface ContactInfo {
@@ -74,6 +75,8 @@ export function useBookingState() {
   };
 
   const handleNestedOptionSelect = (optionType: string, optionId: string, quantity: number) => {
+    console.log(`Setting nested option: ${optionType}, ${optionId}, quantity: ${quantity}`);
+    
     setSelectedNestedOptions(prev => {
       const updatedOptions = { ...prev };
       
@@ -90,6 +93,7 @@ export function useBookingState() {
         };
       }
       
+      console.log("Updated nested options:", updatedOptions);
       return updatedOptions;
     });
   };

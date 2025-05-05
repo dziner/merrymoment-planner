@@ -1,3 +1,4 @@
+
 import React, { useState, MouseEvent } from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -103,7 +104,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
           {price.toLocaleString()}원
         </div>
         
-        {/* Show quantity selector for all options with hasQuantity when selected */}
+        {/* Show quantity selector for options with hasQuantity when selected */}
         {isSelected && hasQuantity && onQuantityChange && (
           <QuantitySelector
             quantity={quantity}
@@ -114,8 +115,8 @@ const OptionCard: React.FC<OptionCardProps> = ({
         )}
       </div>
 
-      {/* Nested options dropdown */}
-      {isSelected && isExpanded && nestedOptions && nestedOptions.length > 0 && (
+      {/* Nested options dropdown - Fixed to always show when selected */}
+      {isSelected && nestedOptions && nestedOptions.length > 0 && (
         <div className="mt-2 pl-2 border-l-2 border-merrymoment-beige">
           {nestedOptions.map(option => {
             const isNestedSelected = selectedNestedOptions && selectedNestedOptions[option.id] > 0;

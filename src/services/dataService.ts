@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Types for our dynamic data
@@ -185,13 +186,19 @@ const transformOptionData = (rawData: any[]): OptionData[] => {
     const hasQuantity = item.hasQuantity === 'TRUE' || item.hasQuantity === 'true' || item.hasQuantity === true;
     const hasNestedOptions = item.hasNestedOptions === 'TRUE' || item.hasNestedOptions === 'true' || item.hasNestedOptions === true;
     
+    // Fix: use optionsType instead of optionType
+    let optionsType: 'album' | 'frame' | undefined;
+    if (item.optionsType === 'album' || item.optionsType === 'frame') {
+      optionsType = item.optionsType as 'album' | 'frame';
+    }
+    
     return {
       id: Number(item.id) || 0,
       title: item.title || '',
       price: Number(String(item.price).replace(/,/g, '')) || 0,
       hasQuantity: hasQuantity,
       hasNestedOptions: hasNestedOptions,
-      optionsType: (item.optionsType === 'album' || item.optionsType === 'frame') ? item.optionsType : undefined,
+      optionsType: optionsType
     };
   });
 };
